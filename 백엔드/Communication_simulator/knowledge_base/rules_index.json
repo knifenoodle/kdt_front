@@ -1,0 +1,131 @@
+{
+  "_description": "시나리오 생성 규칙 엔진의 마스터 인덱스. 각 rule 문서의 메타데이터를 요약해 벡터 임베딩 없이도 빠른 필터링/검색이 가능하게 한다. RAG 파이프라인(LangChain/Chroma 등)은 이 인덱스를 읽거나, files 경로의 원문 마크다운을 직접 임베딩해도 된다.",
+  "_category_legend": {
+    "legal": "⚖️ 법적 규제 - 위반 시 법적 리스크. severity=critical은 반드시 준수, 예외 없음.",
+    "government": "🏛️ 정부 과제/사업 요구사항 - 사업 협약, 심의, 교육기관 납품 조건 등.",
+    "ethics": "🧭 윤리/도덕성 기준 - 법으로 강제되지 않으나 서비스 철학상 준수해야 할 기준.",
+    "guideline": "👶 아동발달/상담 지침 - 콘텐츠 품질과 연령 적합성을 위한 전문 지침."
+  },
+  "rules": [
+    {
+      "id": "LEGAL-001",
+      "category": "legal",
+      "status": "active",
+      "severity": "critical",
+      "title": "아동복지법 제17조(금지행위) - 정서적 학대 금지",
+      "file": "knowledge_base/legal/LEGAL-001_아동복지법_금지행위.md",
+      "source_name": "아동복지법 제17조, 제3조제7호",
+      "source_url": "https://www.law.go.kr/법령/아동복지법",
+      "tags": ["학대", "정서적학대", "아동복지", "금지행위"],
+      "applies_to": ["scenario_generation", "voice_response"]
+    },
+    {
+      "id": "LEGAL-002",
+      "category": "legal",
+      "status": "active",
+      "severity": "critical",
+      "title": "학교폭력예방법 제2조(정의) - 학교폭력/따돌림/사이버폭력",
+      "file": "knowledge_base/legal/LEGAL-002_학교폭력예방법_정의.md",
+      "source_name": "학교폭력예방 및 대책에 관한 법률 제2조",
+      "source_url": "https://www.law.go.kr/법령/학교폭력예방및대책에관한법률",
+      "tags": ["학교폭력", "따돌림", "사이버폭력", "정의"],
+      "applies_to": ["scenario_generation", "scoring_feedback"]
+    },
+    {
+      "id": "LEGAL-003",
+      "category": "legal",
+      "status": "active",
+      "severity": "critical",
+      "title": "개인정보보호법 제22조의2 - 만 14세 미만 법정대리인 동의",
+      "file": "knowledge_base/legal/LEGAL-003_개인정보보호법_아동특례.md",
+      "source_name": "개인정보보호법 제22조의2",
+      "source_url": "https://www.law.go.kr/법령/개인정보보호법",
+      "tags": ["개인정보", "아동", "법정대리인", "STT", "음성데이터"],
+      "applies_to": ["data_collection", "voice_input_processing", "parent_report"]
+    },
+    {
+      "id": "GOV-001",
+      "category": "government",
+      "status": "draft",
+      "severity": "high",
+      "title": "[TODO] 참여 중인 정부지원사업/해커톤 공고문 요구사항",
+      "file": "knowledge_base/government/GOV-001_정부지원사업_요구사항_TEMPLATE.md",
+      "source_name": "TODO: 실제 공고문 명칭 입력",
+      "source_url": "TODO",
+      "tags": ["정부과제", "공고문", "TODO"],
+      "applies_to": ["scenario_generation", "data_handling", "reporting"]
+    },
+    {
+      "id": "GOV-002",
+      "category": "government",
+      "status": "active",
+      "severity": "high",
+      "title": "학교 AI 소프트웨어 선정 개인정보보호 필수 기준",
+      "file": "knowledge_base/government/GOV-002_교육기관_AI소프트웨어_개인정보요건.md",
+      "source_name": "에듀프레스 보도 (학운위 개인정보보호 요건 심의)",
+      "source_url": "https://www.edupress.kr/news/articleView.html?idxno=21594",
+      "tags": ["교육기관", "학교", "B2G", "개인정보"],
+      "applies_to": ["data_handling", "b2g_expansion"]
+    },
+    {
+      "id": "GOV-003",
+      "category": "government",
+      "status": "active",
+      "severity": "medium",
+      "title": "생성형 인공지능 서비스 이용자 보호 가이드라인 (KISDI)",
+      "file": "knowledge_base/government/GOV-003_생성형AI_이용자보호_가이드라인.md",
+      "source_name": "생성형 인공지능 서비스 이용자 보호 가이드라인 (KISDI)",
+      "source_url": "https://user-archive.kisdi.re.kr/download/AIguideline.pdf",
+      "tags": ["생성형AI", "이용자보호", "고지"],
+      "applies_to": ["scenario_generation", "voice_response", "disclosure"]
+    },
+    {
+      "id": "ETH-001",
+      "category": "ethics",
+      "status": "active",
+      "severity": "high",
+      "title": "국가 인공지능 윤리기준 - 3대 원칙 · 10대 요건 (과기정통부)",
+      "file": "knowledge_base/ethics/ETH-001_AI윤리기준_과기정통부.md",
+      "source_name": "국가 인공지능 윤리기준 (과학기술정보통신부, 2020.12)",
+      "source_url": "https://www.unipress.co.kr/news/articleView.html?idxno=2744",
+      "tags": ["AI윤리", "인간존엄성", "공공선", "투명성", "안전성"],
+      "applies_to": ["scenario_generation", "voice_response", "system_design"]
+    },
+    {
+      "id": "ETH-002",
+      "category": "ethics",
+      "status": "draft",
+      "severity": "high",
+      "title": "아동 대상 콘텐츠 도덕성 원칙 (내부 편집 기준)",
+      "file": "knowledge_base/ethics/ETH-002_아동콘텐츠_도덕성_원칙.md",
+      "source_name": "내부 편집 기준 (전문가 자문 필요)",
+      "source_url": "N/A",
+      "tags": ["도덕성", "편집기준", "내부기준"],
+      "applies_to": ["scenario_generation"]
+    },
+    {
+      "id": "GDL-001",
+      "category": "guideline",
+      "status": "draft",
+      "severity": "medium",
+      "title": "초등 저학년 사회·정서 발달 특성 - 난이도 설계 지침",
+      "file": "knowledge_base/guideline/GDL-001_아동발달_사회정서_지침.md",
+      "source_name": "발달심리학 일반 원칙 (전문가 자문 필요)",
+      "source_url": "N/A",
+      "tags": ["아동발달", "사회정서", "난이도", "언어수준"],
+      "applies_to": ["scenario_generation", "difficulty_tuning"]
+    },
+    {
+      "id": "GDL-002",
+      "category": "guideline",
+      "status": "active",
+      "severity": "high",
+      "title": "'장난'과 '폭력/괴롭힘'의 경계 판단 지침 - 시나리오 카테고리 정의",
+      "file": "knowledge_base/guideline/GDL-002_장난과폭력의경계_판단지침.md",
+      "source_name": "README 문제정의 기반 팀 자체 정리",
+      "source_url": "N/A",
+      "tags": ["장난", "경계표현", "카테고리", "갈등유형"],
+      "applies_to": ["scenario_generation", "category_classification"]
+    }
+  ]
+}

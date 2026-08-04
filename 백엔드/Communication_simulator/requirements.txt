@@ -1,0 +1,10 @@
+google-genai>=0.5.0
+pydantic>=2.0
+pyyaml>=6.0
+fastapi>=0.110.0
+uvicorn>=0.29.0
+
+# 선택 사항 - 벡터 기반 RAG 검색으로 승격하고 싶을 때만 설치 (README 기술스택: LangChain/Chroma)
+# langchain-community>=0.2.0
+# langchain-openai>=0.1.0
+# chromadb>=0.5.0
