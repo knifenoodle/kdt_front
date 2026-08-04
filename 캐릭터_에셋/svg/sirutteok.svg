@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="512" height="512">
+  <style>
+    .eye{fill:#3B3222}
+    .eye-arc{display:none;fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round}
+    .brows{display:none}
+    .brow{fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round}
+    .mouth{display:none;fill:none;stroke:#3B3222;stroke-width:6;stroke-linecap:round}
+    .m-grin,.m-o{fill:#7A4A48;stroke:none}
+    .m-smile{display:block}          /* idle 기본 표정 */
+    .extras>*{display:none}
+    .blush ellipse{fill:#F09AA8;opacity:.6}
+    .tear{fill:#7FB3E8} .sweat{fill:#9CC9F0} .spark path{fill:#FFC12E}
+    .dots,.hand{display:none}
+    .yk-syrup{display:none}         /* 약과 화해 조청 — 연출 중에만 */
+    .kk-drip{display:none}          /* 꿀떡 흘러넘치는 방울 — 누를 때만 */
+    .honey-coat{display:none}       /* 무지개떡 꿀 코팅 — 완성 보상에서만 */
+    .pat-burst{display:none}
+  </style>
+<g class="body"><rect class="lay1" x="34" y="62"  width="172" height="72" rx="18" fill="#F0E2C6"/><rect class="pat"  x="34" y="134" width="172" height="14" rx="6"  fill="#8E4A6B"/><rect class="lay2" x="34" y="148" width="172" height="32" rx="13" fill="#F0E2C6"/><rect class="pat"  x="34" y="180" width="172" height="14" rx="6"  fill="#8E4A6B"/><rect class="lay3" x="34" y="194" width="172" height="32" rx="13" fill="#F0E2C6"/><g class="face"><g class="brows"><path class="brow bl" d="M77,69 q15,-9 30,0"/><path class="brow br" d="M133,69 q15,-9 30,0"/></g><g class="eyes"><ellipse class="eye" cx="92" cy="96" rx="9" ry="10.799999999999999"/><ellipse class="eye" cx="148" cy="96" rx="9" ry="10.799999999999999"/><path class="eye-arc" d="M81,99 q11,-15 22,0"/><path class="eye-arc" d="M137,99 q11,-15 22,0"/></g><path class="mouth m-smile" d="M104,120 q16,16 32,0"/><path class="mouth m-flat"  d="M107,124 h26"/><ellipse class="mouth m-open" cx="120" cy="126" rx="14" ry="12"/><path class="mouth m-grin"  d="M99,117 q21,28 42,0 Z"/><path class="mouth m-frown" d="M105,129 q15,-15 30,0"/><path class="mouth m-wavy"  d="M102,124 q9,-9 18,0 q9,9 18,0"/><ellipse class="mouth m-o"  cx="120" cy="125" rx="9" ry="12"/><g class="extras"><g class="blush"><ellipse cx="77" cy="112" rx="12" ry="7"/><ellipse cx="163" cy="112" rx="12" ry="7"/></g><path class="tear"  d="M92,109 c-6,9 -9,13 -9,17 a9,9 0 0 0 18,0 c0,-4 -3,-8 -9,-17 Z"/><path class="sweat" d="M170,60 c-5,8 -8,11 -8,15 a8,8 0 0 0 16,0 c0,-4 -3,-7 -8,-15 Z"/><g class="spark"><path transform="translate(64,64)" d="M0,-9 L2.5,-2.5 L9,0 L2.5,2.5 L0,9 L-2.5,2.5 L-9,0 L-2.5,-2.5 Z"/><path transform="translate(176,60)" d="M0,-9 L2.5,-2.5 L9,0 L2.5,2.5 L0,9 L-2.5,2.5 L-9,0 L-2.5,-2.5 Z"/><path transform="translate(168,122)" d="M0,-9 L2.5,-2.5 L9,0 L2.5,2.5 L0,9 L-2.5,2.5 L-9,0 L-2.5,-2.5 Z"/></g></g></g></g><g class="pat-burst"><circle cx="120" cy="140" r="4" fill="#8E4A6B" style="--dx:-46px;--dy:-26px;animation-delay:0.000s"/><circle cx="120" cy="180" r="5" fill="#8E4A6B" style="--dx:-30px;--dy:-40px;animation-delay:0.035s"/><circle cx="120" cy="140" r="6" fill="#8E4A6B" style="--dx:46px;--dy:-24px;animation-delay:0.070s"/><circle cx="120" cy="180" r="4" fill="#8E4A6B" style="--dx:32px;--dy:-42px;animation-delay:0.105s"/><circle cx="120" cy="140" r="5" fill="#8E4A6B" style="--dx:-52px;--dy:4px;animation-delay:0.140s"/><circle cx="120" cy="180" r="6" fill="#8E4A6B" style="--dx:52px;--dy:2px;animation-delay:0.175s"/></g><g class="dots"><circle cx="98" cy="60" r="7" fill="#6B7B99"/><circle cx="118" cy="60" r="7" fill="#6B7B99"/><circle cx="138" cy="60" r="7" fill="#6B7B99"/></g>
+</svg>

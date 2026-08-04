@@ -1,0 +1,2369 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>또랑 — 아이 세션 목업 v1 (떡 캐릭터)</title>
+<style>
+/* ───────────────────────── 토큰 (CLAUDE.md 3절) ───────────────────────── */
+:root{
+  --bg:#F4F1FB;
+  --surface:#FFFFFF;
+  --action:#FFC12E;
+  --success:#2FB477;
+  --character:#FF8A47;
+  --ink:#2B3A55;
+  --ink-soft:#6B7B99;
+
+  /* 떡 몸통 — 저채도 */
+  --song-body:#A8CE86;      /* 쑥색 송편 */
+  --song-body-d:#8FBB6C;
+  --siru-cake:#F0E2C6;      /* 시루떡 켜 */
+  --siru-pat:#8E4A6B;       /* 팥 자주 */
+  --gara-body:#F8F2E6;      /* 가래떡 */
+  --injeol-body:#F3EBD8;
+  --injeol-dust:#D9B872;    /* 콩고물 */
+  --kkul-body:#F6F0E4;
+  --kkul-honey:#E8A93C;
+  --yakgwa-body:#E3B472;    /* 갈색을 면적색으로 쓰지 않는다 → 조청 금빛으로 밝힘 */
+  --baek-body:#FBF8F3;
+
+  --tap-min:76px;
+  --tap-primary:88px;
+  --gap:16px;
+  --dur-instant:100ms;
+  --dur-normal:220ms;
+  --dur-slow:400ms;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:#DCD7EA;
+  font-family:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  color:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:16px;overflow:hidden;
+}
+
+/* ───────────────────────── 태블릿 프레임 ───────────────────────── */
+#frame{
+  width:820px;height:1180px;flex:none;
+  background:var(--bg);
+  border-radius:44px;
+  border:14px solid #2B3A55;
+  box-shadow:0 24px 60px rgba(43,58,85,.35);
+  position:relative;overflow:hidden;
+  transform-origin:center center;
+}
+
+/* 화면 — 스크롤 없음, 한 화면 한 행동 */
+.screen{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;
+  padding:36px 40px 40px;
+}
+.screen.on{display:flex}
+/* 화면 자체는 슬라이드시키지 않는다 — 만 4~6세는 화면 전체가 움직이면 시선의
+   기준점을 잃는다. **캐릭터가 시선 앵커**이므로 전환은 캐릭터가 지고 가고,
+   화면 교체는 그 뒤에서 조용히 일어난다. 여기 페이드는 하드컷의 거슬림만 없애는
+   최소 처리다(180ms). display 는 전이가 불가능해 opacity 를 한 겹 얹는다 */
+.screen{opacity:0;transition:opacity 180ms ease-out}
+.screen.on.vis{opacity:1}
+
+/* ───────────────────────── 공통 버튼 (단일 탭만) ───────────────────────── */
+.tap{
+  min-width:var(--tap-min);min-height:var(--tap-min);
+  border:none;background:var(--surface);
+  border-radius:28px;
+  display:inline-flex;align-items:center;justify-content:center;flex-direction:column;
+  gap:6px;cursor:pointer;
+  color:var(--ink);
+  box-shadow:0 6px 0 rgba(43,58,85,.18);
+  transition:transform var(--dur-instant) ease-out, box-shadow var(--dur-instant) ease-out;
+  padding:10px 18px;
+  font-family:inherit;
+}
+.tap:active{transform:translateY(5px);box-shadow:0 1px 0 rgba(43,58,85,.18)}
+.tap[data-off="1"]{opacity:.5;pointer-events:none}
+.tap .cap{font-size:22px;font-weight:800;line-height:1.2}
+.tap.primary{min-width:var(--tap-primary);min-height:var(--tap-primary)}
+
+/* ───────────────────────── 1. 시작 화면 ───────────────────────── */
+#s-start{align-items:center;justify-content:space-between}
+.parent-door{
+  position:absolute;top:28px;right:32px;
+  width:56px;height:56px;border-radius:18px;   /* 보호자 예외 56 */
+  background:rgba(107,123,153,.14);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.start-hero{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:34px}
+.start-hero .hi{font-size:28px;font-weight:800;color:var(--ink)}
+
+/* 송편 색 고르기 — 아이 화면이므로 88px, 단일 탭, 글자 없이 형태로만 */
+.colors{display:flex;gap:var(--gap);margin-top:6px}
+.swatch{
+  width:88px;height:88px;border-radius:44px;border:none;cursor:pointer;
+  background:var(--surface);padding:0;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 rgba(43,58,85,.14);
+  transition:transform var(--dur-instant) ease-out, box-shadow var(--dur-instant) ease-out;
+}
+.swatch:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(43,58,85,.14)}
+.swatch svg{width:66px;height:66px;display:block}
+.swatch.sel{outline:6px solid var(--action);outline-offset:-3px}
+.today{
+  display:flex;align-items:center;gap:var(--gap);
+  background:var(--surface);border-radius:36px;padding:18px 30px;
+  box-shadow:0 8px 0 rgba(43,58,85,.10);
+}
+.today .who{width:96px;height:96px}
+.today .what{display:flex;flex-direction:column;gap:2px}
+.today .what b{font-size:26px}
+.today .what span{font-size:18px;color:var(--ink-soft)}
+
+#btn-start{
+  width:200px;height:200px;border-radius:100px;
+  background:var(--action);
+  box-shadow:0 10px 0 #D99F17;
+}
+#btn-start:active{box-shadow:0 2px 0 #D99F17}
+#btn-start .cap{font-size:26px}
+
+.locked-row{display:flex;gap:var(--gap);align-items:flex-end;justify-content:center;
+  padding-bottom:6px}
+.locked{
+  width:104px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:.45;pointer-events:none;
+}
+.locked svg{width:72px;height:72px}
+.locked .lk{font-size:16px;color:var(--ink-soft);font-weight:700}
+
+/* ───────────────────────── 2~6. 대화 화면 ───────────────────────── */
+#s-talk{justify-content:space-between}
+.turnbar{display:flex;gap:12px;justify-content:center;align-items:center;height:34px}
+.turnbar i{
+  width:22px;height:22px;border-radius:11px;
+  background:rgba(107,123,153,.22);display:block;
+  transition:background var(--dur-normal), transform var(--dur-normal);
+}
+.turnbar i.done{background:var(--success);transform:scale(1.15)}
+.turnbar i.now{background:var(--action)}
+
+.stage{
+  flex:1;position:relative;
+  display:flex;align-items:flex-end;justify-content:center;gap:10px;
+  padding-bottom:22px;
+}
+/* 배경 장소 — 캐릭터 뒤. 채도를 낮추고 위아래로 스크림을 깔아
+   캐릭터와 말풍선이 배경에 묻히지 않게 한다 */
+.scene{
+  position:absolute;inset:0;border-radius:26px;overflow:hidden;
+  filter:saturate(.8);
+  box-shadow:inset 0 0 0 3px rgba(43,58,85,.06);
+}
+.scene svg{width:100%;height:100%;display:block}
+.scene::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    rgba(244,241,251,.38) 0%, rgba(244,241,251,0) 26%,
+    rgba(244,241,251,0) 58%, rgba(244,241,251,.62) 100%);
+}
+.actor{position:relative;z-index:2;transition:transform var(--dur-slow) ease-out}
+.actor svg{display:block}
+#a-song svg{width:290px;height:290px}
+#a-other svg{width:420px;height:420px}
+#a-song{margin-bottom:-34px}   /* 두 캐릭터 발밑선 맞춤 (viewBox 여백 차이 보정) */
+
+/* 캐릭터 상태 표현 --------------------------------------------------- */
+.eye{fill:#3B3222}
+.mouth{display:none;fill:none;stroke:#3B3222;stroke-width:6;stroke-linecap:round}
+.mouth.m-open{fill:#7A4A48;stroke:none}
+/* (1) 기능 상태가 정하는 기본 입 */
+[data-state="idle"]     .m-smile{display:block}
+[data-state="listening"] .m-smile{display:block}
+[data-state="thinking"] .m-flat{display:block}
+[data-state="canthear"] .m-flat{display:block}
+@keyframes talk{from{transform:scaleY(.45)}to{transform:scaleY(1)}}
+.m-open{transform-box:fill-box;transform-origin:center}
+
+/* ── 호흡 + 깜빡임 = 살아 있다는 신호 ──────────────────────────
+   예전엔 idle 에만 호흡이 걸려 있어서 **듣는 중·생각 중에는 캐릭터가 완전히 정지**했다.
+   상태마다 켜두되 주기를 달리해 "지금 무엇을 하는 중인가"를 호흡으로도 읽게 한다. */
+[data-state="idle"]      .body{animation:breathe 3.4s ease-in-out infinite}  /* 평온 */
+[data-state="listening"] .body{animation:breathe 2.6s ease-in-out infinite}  /* 집중해서 듣는 중 */
+[data-state="thinking"]  .body{animation:breathe 4.2s ease-in-out infinite}  /* 골똘히 */
+/* cantHear 에서도 멈추지 않는다 — 아이가 "다시 말해야" 하는 순간에 캐릭터가
+   정지하면 화면이 죽은 것처럼 보인다. 살짝 빠르게(안달, 재촉 아님) */
+[data-state="canthear"]  .body{animation:breathe 3s ease-in-out infinite}
+
+/* 대기가 길어질 때의 변주 — 8초·16초에 고개를 한 번 기울였다 돌아온다.
+   ⚠ 강도가 올라가면 재촉이다. 이 신호는 1회성이고 세지지 않는다 */
+.nudge{animation:nudge .6s ease-in-out}
+@keyframes nudge{0%,100%{transform:rotate(0)}45%{transform:rotate(6deg)}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.body{transform-box:fill-box;transform-origin:bottom center}
+.eyes{animation:blink 5.2s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.eyes{transform-box:fill-box;transform-origin:center}
+
+/* listening: 몸이 살짝 기울고 눈이 커진다 */
+[data-state="listening"]{transform:rotate(-5deg)}
+[data-state="listening"] .eye{--eye-sx:1.25;--eye-sy:1.25}
+/* thinking: 고개 갸웃 + 점 세 개 */
+[data-state="thinking"]{transform:rotate(6deg)}
+.dots,.hand{display:none}
+[data-state="thinking"] .dots{display:block}
+.dots circle{animation:dot 1.1s infinite}
+.dots circle:nth-child(2){animation-delay:.18s}
+.dots circle:nth-child(3){animation-delay:.36s}
+@keyframes dot{0%,100%{opacity:.25}50%{opacity:1}}
+/* cantHear: 손을 귀에 */
+[data-state="canthear"] .hand{display:block}
+[data-state="canthear"]{transform:rotate(-8deg)}
+
+/* ─────────────── (2) 감정 레이어 — 기능 상태 위에 얹는다 ───────────────
+   기능 상태(듣는 중/말하는 중)와 감정(기쁨/슬픔/…)은 서로 다른 축이다.
+   말하면서 슬플 수 있어야 하므로 두 축을 겹쳐서 표현한다.            */
+.brows{display:none}
+.brow{
+  fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round;
+  transform-box:fill-box;transform-origin:center;
+  transition:transform var(--dur-normal) ease-out;
+}
+.eye-arc{display:none;fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round}
+.m-grin,.m-o{fill:#7A4A48;stroke:none}
+.extras>*{display:none}
+.blush ellipse{fill:#F09AA8;opacity:.6}
+.tear{fill:#7FB3E8}
+.sweat{fill:#9CC9F0}
+.spark path{fill:var(--action)}
+
+/* 눈썹 — 화남에만 쓴다.
+   떡에는 눈썹이 없는 게 자연스럽고, 나머지 감정은 눈·입·부속만으로 읽힌다.
+   화남만은 눈썹 없이 성립하지 않아서 예외로 남긴다. */
+[data-emo="angry"] .brows{display:block}
+[data-emo="angry"] .bl{transform:translateY(6px) rotate(17deg)}
+[data-emo="angry"] .br{transform:translateY(6px) rotate(-17deg)}
+
+/* ── 눈 — 4채널을 변수로 쪼갠다 ────────────────────────────────
+   가로·세로·시선(x,y)을 따로 두는 이유: 감정(크기)과 시선(방향)이 서로 다른 축인데
+   transform 선언 하나로는 겹쳐 쓸 수 없다. 변수로 나누면 둘이 독립적으로 얹힌다.
+   ⚠ 눈꺼풀을 별도 도형으로 얹지 않았다 — 몸통색을 8개 SVG에 물려야 해서
+      결합도가 커진다. 대신 transform-origin 을 위로 옮기고 세로를 눌러
+      "아래 눈꺼풀이 올라온" 모양을 같은 도형으로 만든다.                */
+.eye{
+  transform-box:fill-box;transform-origin:center;
+  --eye-sx:1;--eye-sy:1;--eye-tx:0px;--eye-ty:0px;
+  transform:translate(var(--eye-tx),var(--eye-ty)) scale(var(--eye-sx),var(--eye-sy));
+  transition:transform var(--dur-normal) ease-out;
+}
+[data-emo="joy"] .eye,[data-emo="proud"] .eye,[data-emo="shy"] .eye{display:none}
+[data-emo="joy"] .eye-arc,[data-emo="proud"] .eye-arc,[data-emo="shy"] .eye-arc{display:block}
+[data-emo="joy"] .eyes,[data-emo="proud"] .eyes,[data-emo="shy"] .eyes{animation:none}
+[data-emo="angry"] .eye{--eye-sy:.72}
+[data-emo="sad"]   .eye{--eye-sx:1.14;--eye-sy:1.14}
+/* 무서움 ↔ 놀람 — 예전엔 땀방울 하나로만 갈렸다. 이제 6채널이 다르고 그중 5개가 정적이다 */
+[data-emo="scared"] .eye{--eye-sx:1.32;--eye-sy:.74;transform-origin:top center}  /* 아래서 눌린 눈 */
+[data-emo="surprised"] .eye{--eye-sx:1.45;--eye-sy:1.45}                          /* 온전히 커진 눈 */
+
+/* 시선 — 누구에게 하는 말인가를 눈으로 가리킨다.
+   in = 서로를 본다(둘 사이의 일) / 기본 = 아이를 본다(나에게 하는 말) */
+#a-song[data-gaze="in"]  .eye{--eye-tx:5px}    /* 왼쪽에 서 있으므로 오른쪽을 본다 */
+#a-other[data-gaze="in"] .eye{--eye-tx:-5px}
+
+/* ── 감정 전이 — 눈 감았다 뜨는 사이에 바꾼다 ────────────────────
+   입·부속은 display 스왑이라 크로스페이드가 물리적으로 불가능하다.
+   그래서 페이드 대신 **부위가 바뀌는 프레임을 눈꺼풀 뒤에 숨긴다.**
+   사람도 표정을 바꿀 때 눈을 깜빡인다 — 새 개념을 들이지 않는 우회로다. */
+.eyes{transition:transform 110ms ease-in}
+.emo-blink .eyes{animation:none;transform:scaleY(.06)}
+
+/* 약한 감정 — 부속(볼·눈물·땀·반짝)만 끄고 눈·입은 남긴다.
+   파트너가 상대역보다 한 단계 약하게 반응해야 편들기로 읽히지 않는다.
+   새 감정을 만들지 않으므로 가이드 §5 조합표가 그대로 유효하다. */
+/* !important 를 쓴다 — 감정별 부속 규칙([data-emo="sad"] .tear 등)이 명시도 (0,2,0)이라
+   (0,1,0)인 이 규칙이 그냥은 진다. 여기는 감정 위에 덮는 의도적 오버라이드 층이다 */
+[data-emo-soft="1"] .extras>*{display:none !important}
+
+/* 입 — 감정이 기능 상태의 기본 입을 덮어쓴다 */
+[data-emo="joy"] .mouth{display:none}       [data-emo="joy"] .m-grin{display:block}
+[data-emo="proud"] .mouth{display:none}     [data-emo="proud"] .m-grin{display:block}
+[data-emo="sad"] .mouth{display:none}       [data-emo="sad"] .m-frown{display:block}
+[data-emo="angry"] .mouth{display:none}     [data-emo="angry"] .m-wavy{display:block}
+[data-emo="scared"] .mouth{display:none}    [data-emo="scared"] .m-o{display:block}     /* 오므린 작은 O */
+[data-emo="surprised"] .mouth{display:none} [data-emo="surprised"] .m-open{display:block} /* 크게 벌린 O */
+[data-emo="shy"] .mouth{display:none}       [data-emo="shy"] .m-smile{display:block}
+
+/* 부속 */
+[data-emo="joy"] .blush,[data-emo="proud"] .blush,[data-emo="shy"] .blush{display:block}
+[data-emo="shy"] .blush ellipse{opacity:.9}
+[data-emo="sad"] .tear{display:block;animation:teardrop 2.6s ease-in infinite}
+@keyframes teardrop{0%{opacity:0;transform:translateY(-4px)}
+                    25%{opacity:1;transform:translateY(0)}
+                    100%{opacity:0;transform:translateY(26px)}}
+.tear{transform-box:fill-box}
+[data-emo="scared"] .sweat{display:block;animation:teardrop 3s ease-in infinite}
+.sweat{transform-box:fill-box}
+[data-emo="joy"] .spark,[data-emo="proud"] .spark{display:block;animation:twinkle 1.7s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.35}50%{opacity:1}}
+/* 화남은 뿔·김 같은 부속을 쓰지 않는다 — 도깨비처럼 보이면 안 된다.
+   눈썹·입·볼 온기만으로 충분히 읽힌다 (시루떡은 악당이 아니다) */
+[data-emo="angry"] .blush{display:block}
+[data-emo="angry"] .blush ellipse{fill:var(--character);opacity:.32}
+/* 놀람은 한 번 크게 튀고 잦아든다 / 무서움은 작게 계속 떤다 — 성격이 정반대다 */
+[data-emo="surprised"] .body{animation:jolt .5s ease-out}
+@keyframes jolt{0%{transform:scale(1)}30%{transform:scale(1.09)}100%{transform:scale(1)}}
+[data-emo="scared"] .body{animation:tremble .13s linear infinite}
+@keyframes tremble{0%,100%{transform:translateX(-1.5px)}50%{transform:translateX(1.5px)}}
+
+/* ─────────────── (3) 말하는 중이면 입은 언제나 움직인다 ─────────────── */
+[data-state="speaking"] .mouth{display:none}
+[data-state="speaking"] .m-open{display:block;animation:talk .26s infinite alternate}
+
+/* ── 캐릭터별 특기 동작 ─────────────────────────────────────── */
+
+/* 가래떡: 말할 때 몸이 세로로 늘어난다 (squash & stretch) */
+[data-state="speaking"] .gara{animation:stretch .46s ease-in-out infinite alternate}
+@keyframes stretch{from{transform:scaleY(1) scaleX(1)}to{transform:scaleY(1.09) scaleX(.95)}}
+
+/* 꿀떡: 누르면 속 꿀이 차오르고 한 방울 흘러넘친다 */
+.kk-honey{transform-box:fill-box;transform-origin:bottom center;
+  transition:transform var(--dur-normal) ease-out, opacity var(--dur-normal)}
+.kk-drip{opacity:0;transform-box:fill-box}
+.squeeze .kk-honey{transform:scaleY(2.1) scaleX(1.16);opacity:.85}
+.squeeze .kk-drip{animation:kkdrip 1.1s ease-in forwards}
+@keyframes kkdrip{0%{opacity:0;transform:translateY(-8px)}
+                  25%{opacity:1;transform:translateY(0)}
+                  100%{opacity:0;transform:translateY(34px)}}
+
+/* 약과: 갈라졌다가 조청으로 다시 붙는다 (사과·화해) */
+.yk-l,.yk-r{transform-box:fill-box;transform-origin:center}
+.yk-syrup{opacity:0}
+.mending .yk-l{animation:ykL 2.6s cubic-bezier(.4,0,.2,1) both}
+.mending .yk-r{animation:ykR 2.6s cubic-bezier(.4,0,.2,1) both}
+.mending .yk-syrup{animation:ykSyrup 2.6s ease-in-out both}
+@keyframes ykL{0%{transform:translateX(0) rotate(0)}
+               18%{transform:translateX(-26px) rotate(-7deg)}
+               55%{transform:translateX(-26px) rotate(-7deg)}
+               100%{transform:translateX(0) rotate(0)}}
+@keyframes ykR{0%{transform:translateX(0) rotate(0)}
+               18%{transform:translateX(26px) rotate(7deg)}
+               55%{transform:translateX(26px) rotate(7deg)}
+               100%{transform:translateX(0) rotate(0)}}
+@keyframes ykSyrup{0%,12%{opacity:0}
+                   30%{opacity:1}
+                   80%{opacity:1}
+                   100%{opacity:0}}
+
+/* 캐릭터 등·퇴장 — 즉시 교체하지 않는다 */
+/* .actor 한정을 풀었다 — 시작 화면의 송편(#hero-song)도 같은 문법으로 퇴장시킨다 */
+.entering{animation:actorIn .42s cubic-bezier(.2,1.6,.4,1) both}
+.leaving{animation:actorOut .28s ease-in both}
+@keyframes actorIn{from{transform:translateY(60px) scale(.55);opacity:0}
+                   to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes actorOut{from{transform:translateY(0) scale(1);opacity:1}
+                    to{transform:translateY(40px) scale(.7);opacity:0}}
+
+/* ── 마음 열림 — 앱에서 가장 강한 학습 지점 ─────────────────────
+   ① 0.2초 정지(anticipation) → ② 몸이 한 번 크게 부풀고 → ③ 층이 벌어진다.
+   ①은 시선을 모으는 장치다. 멈춘 뒤에 움직여야 "변했다"가 읽힌다.          */
+.freeze *{animation-play-state:paused !important}
+
+/* ② 공통 개방 신호 — 상대역이 시루떡이 아니어도 이건 재생된다 */
+.heart-open .body{animation:heartPuff .62s cubic-bezier(.2,1.5,.4,1) both !important}
+@keyframes heartPuff{0%{transform:scale(1)}42%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* ③ 시루떡 고유 — 층이 벌어진다 */
+.opened .lay1{transform:translate(-16px,-10px) rotate(-6deg)}
+.opened .lay3{transform:translate(16px,10px) rotate(5deg)}
+.opened .pat{opacity:.35}
+.lay1,.lay3,.pat{
+  transition:transform var(--dur-slow) ease-out, opacity var(--dur-slow);
+  transform-box:fill-box;transform-origin:center;
+}
+/* 팥고물이 톡 흩어진다. ⚠ 꿀폭죽과 성격을 반드시 구분한다 —
+   폭죽은 화면 전체·20알·섬광 있음 / 여기는 캐릭터 국소·6알·섬광 없음 */
+.pat-burst{display:none}
+.bursting .pat-burst{display:block}
+.pat-burst circle{
+  transform-box:fill-box;transform-origin:center;
+  animation:patFly .66s ease-out both;
+}
+@keyframes patFly{
+  0%{transform:translate(0,0) scale(.6);opacity:0}
+  18%{opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}
+}
+
+/* 말풍선 — 글자는 보조 레이어 */
+.bubble{
+  background:var(--surface);border-radius:32px;
+  padding:22px 28px;min-height:132px;
+  box-shadow:0 8px 0 rgba(43,58,85,.10);
+  display:flex;flex-direction:column;justify-content:center;gap:8px;
+}
+.bubble .name{font-size:18px;font-weight:800;color:var(--ink-soft)}
+.bubble .line{font-size:28px;line-height:38px;font-weight:700}
+body.no-text .txt{visibility:hidden}
+
+/* 컨트롤 */
+.controls{display:flex;align-items:center;justify-content:center;gap:32px;margin-top:20px}
+#btn-mic{
+  width:220px;height:220px;border-radius:110px;border:none;cursor:pointer;
+  background:var(--action);position:relative;
+  box-shadow:0 10px 0 #D99F17;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform var(--dur-instant) ease-out, box-shadow var(--dur-instant) ease-out;
+}
+#btn-mic:active{transform:translateY(5px);box-shadow:0 2px 0 #D99F17}
+#btn-mic[data-off="1"]{opacity:.5;pointer-events:none}
+#btn-mic.idle{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+#btn-mic.rec{background:var(--success);box-shadow:0 10px 0 #24875A}
+.ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:8px solid var(--success);opacity:0;pointer-events:none;
+}
+#btn-mic.rec .ring{animation:ripple 1.8s ease-out infinite}
+#btn-mic.rec .ring.r2{animation-delay:.9s}
+@keyframes ripple{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.55);opacity:0}}
+#btn-replay{width:120px;height:120px;border-radius:60px}
+
+/* ── 시범(관람) 모드 — "지금은 내 차례가 아니다" ────────────────
+   주 신호는 마이크다. 이 나이대에 "내 차례인가"는 누를 것이 살아 있는가로만
+   판단된다. 화면 톤과 배치는 보조. 마이크의 data-off="1"(opacity .5)은 정적이라
+   prefers-reduced-motion 에서도 그대로 구분된다.                        */
+#s-talk.demo-mode .turnbar{visibility:hidden}          /* 시범은 턴이 아니다 */
+#s-talk.demo-mode .scene{filter:saturate(.5)}          /* 어둡히지 않는다 — 채도만 뺀다 */
+/* 둘이 서로를 향해 기운다 = 둘 사이의 일. 정면 = 나에게 하는 말 */
+#s-talk.demo-mode #a-song{transform:rotate(7deg)}
+#s-talk.demo-mode #a-other{transform:rotate(-6deg)}
+
+/* ───────────────────────── 7. 보상 화면 ───────────────────────── */
+#s-reward{align-items:center;justify-content:center;gap:18px}
+#s-reward .cheer{font-size:36px;font-weight:800}
+#s-reward .bye{font-size:22px;color:var(--ink-soft);margin-top:4px}
+#btn-end{width:150px;height:150px;border-radius:75px;background:var(--action);box-shadow:0 10px 0 #D99F17}
+#btn-end:active{box-shadow:0 2px 0 #D99F17}
+#btn-end .cap{font-size:24px}
+#reward-song{animation:hop 1.4s ease-in-out infinite}
+@keyframes hop{0%,100%{transform:translateY(0)}45%{transform:translateY(-16px)}}
+.rainbow{width:330px;height:330px;margin-top:-10px}
+
+/* ───────── 꿀파티 — 무지개떡 6층을 다 모았을 때만 ───────── */
+.honey-coat{display:none;transform-box:fill-box;transform-origin:top center}
+.rainbow.coated .honey-coat{display:block;animation:pourcoat .9s cubic-bezier(.3,.9,.4,1) both}
+@keyframes pourcoat{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.rainbow.coated .rb{animation:wobble 1.1s ease-out .5s}
+@keyframes wobble{0%,100%{transform:scale(1)}
+                  30%{transform:scale(1.06,.94)}
+                  60%{transform:scale(.97,1.04)}}
+.rb{transform-box:fill-box;transform-origin:bottom center}
+
+.party{position:absolute;inset:0;pointer-events:none;display:none;overflow:hidden}
+#s-reward.party-on .party{display:block}
+.party-bg{z-index:1}
+.party-top{z-index:6}
+/* 파티 중에도 화면 내용과 끝 버튼은 꿀 위로 보인다 */
+#s-reward.party-on #reward-song,
+#s-reward.party-on .cheer,
+#s-reward.party-on .rainbow,
+#s-reward.party-on .bye,
+#s-reward.party-on #btn-end{position:relative;z-index:3}
+/* 바닥 여백은 수영장이 있을 때만 — 꿀파티에서는 화면이 비어 보인다 */
+
+.glow{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 52%, rgba(245,196,74,.55), rgba(245,196,74,0) 44%);
+  animation:glowin 2.6s ease-out both;
+}
+@keyframes glowin{0%{opacity:0}20%{opacity:1}100%{opacity:.5}}
+
+/* 꿀비 */
+.drop{
+  position:absolute;top:-60px;
+  background:linear-gradient(#F7D06A,#E8A93C);
+  border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;
+  animation-name:fall;animation-timing-function:cubic-bezier(.5,0,.9,.6);
+  animation-iteration-count:infinite;
+}
+@keyframes fall{0%{transform:translateY(0) rotate(0)}
+                100%{transform:translateY(1260px) rotate(24deg)}}
+
+/* 연출별 노출 — 세 연출은 서로 섞이지 않는다. 섞는 순간 다 같아진다 */
+.pot,.pour,.drops{display:none}
+.pool{display:none}
+.mortar,.pounder,.mallet{display:none}
+#s-reward.fx-party .pot,
+#s-reward.fx-party .pour,
+#s-reward.fx-party .drops{display:block}
+#s-reward.fx-pool  .pool{display:block}
+#s-reward.fx-pound .mortar,
+#s-reward.fx-pound .pounder,
+#s-reward.fx-pound .mallet{display:block}
+
+/* 꿀단지 — 팝 하고 나타나 기울어 붓는다 */
+.pot{position:absolute;right:52px;top:74px;width:210px;
+  animation:potpop .7s cubic-bezier(.2,1.8,.4,1) .25s both, pottilt 2.8s ease-in-out 1s infinite}
+.pot svg{width:100%;height:auto;display:block}
+@keyframes potpop{from{transform:translateY(-110px) scale(.35) rotate(24deg);opacity:0}
+                  to{transform:translateY(0) scale(1) rotate(-16deg);opacity:1}}
+@keyframes pottilt{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(-30deg)}}
+/* 단지에서 떨어지는 짧은 꿀 줄기 — 길게 늘이면 화면을 갈라버린다 */
+.pour{
+  position:absolute;right:232px;top:152px;width:19px;height:0;
+  border-radius:0 0 10px 10px;
+  background:linear-gradient(#F5C862,#E09B22);
+  animation:pourgrow 1s ease-in 1s forwards;
+}
+@keyframes pourgrow{to{height:168px}}
+
+/* ── 보상 C — 떡메치기 ──────────────────────────────────────────
+   앞의 둘은 **꿀**이 주인공이고 위(쏟아짐)와 아래(고임)를 이미 차지했다.
+   비어 있던 축은 **리듬 · 화면 중앙 · 캐릭터가 행위자**다. 이 셋을 채운다.
+   ⚠ 꿀비·꿀폭죽·꿀 웅덩이·꿀 코팅을 **일절 섞지 않는다.**
+   ⚠ 절구를 어두운 나무색으로 칠하지 않는다(갈색 면적색 금지).
+      밝은 베이지 + 화면 면적 4% 미만으로 유지한다.                        */
+/* 좌표는 프레임(820×1180) 기준 px 로 잡는다 — 무지개떡이 x 245~575 / y 448~778 에
+   고정돼 있어서 %로는 절구·떡메를 그 위에 정확히 얹기 어렵다 */
+.mortar{
+  position:absolute;left:50%;margin-left:-210px;top:672px;width:420px;height:120px;
+  animation:mortarpop .5s cubic-bezier(.2,1.7,.4,1) both;
+}
+/* ⚠ potpop 을 재사용하면 안 된다 — 그 키프레임의 rotate(-16deg)까지 딸려 와 절구가 눕는다.
+   ⚠ opacity 를 키프레임에 넣지 않는다 — 애니메이션이 돌지 않는 환경에서 절구가 사라진다 */
+@keyframes mortarpop{from{transform:translateY(70px) scale(.6)}
+                     to{transform:translateY(0) scale(1)}}
+.mortar::before{                              /* 절구 몸통 */
+  content:'';position:absolute;left:8%;top:26px;right:8%;bottom:0;
+  background:#E8DCC4;border-radius:18px 18px 58px 58px;
+  box-shadow:inset 0 -16px 0 #D3C3A4;
+}
+.mortar::after{                               /* 절구 아가리 — 무지개떡이 여기 얹힌다 */
+  content:'';position:absolute;left:0;right:0;top:0;height:54px;
+  background:#EFE6D5;border-radius:50%;
+  box-shadow:inset 0 9px 0 #D3C3A4;
+}
+/* 인절미가 떡메를 든다 — 인절미는 실제로 떡메로 쳐서 만드는 떡이다. 배정에 근거가 있다 */
+.pounder{position:absolute;left:614px;top:632px;width:172px;
+  animation:bobbing 1.8s ease-in-out infinite}
+.pounder svg{width:100%;height:auto;display:block}
+/* 자루 끝(손)이 회전축. 축 (660,690) 에서 215px 짜리 떡메가 떡 어깨로 내려온다 */
+.mallet{position:absolute;left:643px;top:475px;width:34px;height:215px;
+  transform-origin:bottom center;transform:rotate(24deg)}
+.mallet::before{                              /* 자루 */
+  content:'';position:absolute;left:9px;top:52px;width:17px;bottom:0;
+  background:#E3D2B4;border-radius:9px;
+}
+.mallet::after{                               /* 떡메 머리 */
+  content:'';position:absolute;left:-24px;top:0;width:82px;height:56px;
+  background:#EFE6D5;border-radius:16px;box-shadow:inset 0 -10px 0 #D3C3A4;
+}
+/* 0.9초 × 4 — 이 규칙적인 박자가 다른 두 연출에 없는 축이다 */
+#s-reward.fx-pound .mallet{animation:swing .9s ease-in-out 4}
+@keyframes swing{0%{transform:rotate(24deg)}
+                 26%{transform:rotate(-42deg)}      /* 타격 — 떡 어깨에 닿는다 */
+                 42%{transform:rotate(-32deg)}
+                 100%{transform:rotate(24deg)}}
+/* 칠 때마다 무지개떡이 눌렸다 부푼다. party-on 의 bobcake 를 이겨야 해서 클래스를 하나 더 건다 */
+#s-reward.fx-pound.party-on .rainbow{animation:cakePound .9s ease-out 4}
+@keyframes cakePound{0%,20%{transform:scaleY(1) scaleX(1)}
+                     28%{transform:scaleY(.92) scaleX(1.06)}
+                     46%{transform:scaleY(1.04) scaleX(.98)}
+                     64%,100%{transform:scaleY(1) scaleX(1)}}
+#s-reward.fx-pound .rainbow{transform-origin:bottom center}   /* 절구에 얹혀 눌리는 느낌 */
+/* 마무리 — 반들반들해진다. 꿀 코팅과는 다른 표현이라야 성격이 안 겹친다 */
+.rainbow{position:relative}
+.rainbow.glossy::after{
+  content:'';position:absolute;left:37%;top:27%;width:26%;height:4.2%;
+  border-radius:50%;background:rgba(255,255,255,.6);filter:blur(1px);
+  opacity:var(--gloss,1);
+  animation:glossin .5s ease-out both;pointer-events:none;
+}
+@keyframes glossin{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+/* 콩고물 — 짧게 톡. 폭죽(20알·섬광 있음)과 반드시 다르게 (7알·섬광 없음·짧은 거리) */
+.bean{
+  position:absolute;width:11px;height:11px;border-radius:50%;
+  background:#D9B872;
+  animation:beanfly .55s ease-out both;
+}
+@keyframes beanfly{0%{transform:translate(0,0) scale(.5);opacity:0}
+                   15%{opacity:1}
+                   100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
+
+/* 꿀수영장 */
+.pool{position:absolute;left:0;right:0;bottom:0;height:214px}
+#s-reward.fx-pool{padding-bottom:180px}
+.pool-back{position:absolute;inset:54px 0 0 0;background:linear-gradient(#EDAE3C,#DA9114)}
+.pool-front{position:absolute;left:0;right:0;bottom:0;height:150px}
+.pool-front svg{width:200%;height:100%;display:block;animation:flow 7s linear infinite}
+@keyframes flow{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.swimmers{position:absolute;left:0;right:0;bottom:74px;height:220px}
+.swim{position:absolute;bottom:0;width:176px;animation:bobbing 2.2s ease-in-out infinite}
+.swim svg{width:100%;height:auto;display:block}
+@keyframes bobbing{0%,100%{transform:translateY(0) rotate(-4deg)}
+                   50%{transform:translateY(-22px) rotate(4deg)}}
+.tube{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  width:196px;height:54px;border-radius:50%;
+  border:15px solid #F4A0A8;box-sizing:border-box;
+}
+.tube.b{border-color:#8FC4E0}
+.splash{
+  position:absolute;bottom:58px;width:76px;height:26px;border-radius:50%;
+  background:#FFE9B4;opacity:.8;animation:splashy 1.6s ease-out infinite;
+}
+@keyframes splashy{0%{transform:scale(.4);opacity:.85}100%{transform:scale(1.5);opacity:0}}
+
+/* 꿀폭죽 — 꿀비와 섞이지 않게 흰 섬광 + 퍼지는 링을 같이 쓴다 */
+.spark2{position:absolute;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 16px rgba(255,214,90,.95), 0 0 4px rgba(255,255,255,.9);
+  animation:burst 1.1s cubic-bezier(.12,.7,.35,1) forwards}
+@keyframes burst{
+  0%{transform:translate(0,0) scale(.25);opacity:1}
+  65%{opacity:1}
+  100%{transform:translate(var(--dx), calc(var(--dy) + 80px)) scale(1);opacity:0}
+}
+.boom{
+  position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;
+  border-radius:50%;border:8px solid #F5A623;pointer-events:none;
+  animation:boomring .62s cubic-bezier(.1,.8,.3,1) forwards;
+}
+@keyframes boomring{0%{transform:scale(.3);opacity:1}100%{transform:scale(7.5);opacity:0}}
+.flash{
+  position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle, rgba(255,193,46,.95), rgba(245,166,35,.45) 42%, rgba(245,166,35,0) 70%);
+  animation:flashout .5s ease-out forwards;
+}
+@keyframes flashout{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.5);opacity:0}}
+
+/* 생동감 — 다 같이 들썩인다 */
+#s-reward.party-on #reward-song{animation:hop .7s ease-in-out infinite}
+#s-reward.party-on .cheer{animation:cheerpop 1.1s ease-in-out infinite}
+@keyframes cheerpop{0%,100%{transform:scale(1) rotate(-1.5deg)}50%{transform:scale(1.09) rotate(1.5deg)}}
+#s-reward.party-on .rainbow{animation:bobcake 2.4s ease-in-out infinite}
+@keyframes bobcake{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-14px) rotate(1deg)}}
+.rainbow .rl{opacity:.16;transition:opacity var(--dur-slow) ease-out}
+.rainbow .rl.fill{opacity:1}
+.rainbow .rl.pop{animation:pop .6s ease-out}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.rainbow .rl{transform-box:fill-box;transform-origin:center}
+
+/* ───────────────────────── 캐릭터 확인용 화면 (아이 화면 아님) ───────────────────────── */
+#s-cast{padding:28px 26px 24px;gap:14px}
+.cast-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.cast-head b{font-size:20px;flex:none}
+.cast-rows{display:flex;flex-direction:column;gap:6px;flex:1;align-items:flex-end}
+.cast-line{display:flex;align-items:center;gap:8px}
+.cast-line>span{font-size:12px;font-weight:800;color:var(--ink-soft);width:26px;text-align:right}
+.cast-states{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cast-states button{
+  font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  background:var(--surface);color:var(--ink);border:2px solid rgba(43,58,85,.14);
+  border-radius:9px;padding:7px 10px;
+}
+.cast-states button.sel{background:var(--action);border-color:var(--action)}
+.cast-grid{
+  flex:1;display:grid;grid-template-columns:repeat(4,1fr);
+  gap:12px;align-content:center;
+}
+.cast-cell{
+  background:var(--surface);border-radius:22px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:34px 6px 16px;position:relative;min-height:330px;
+}
+.cast-fig{
+  width:100%;display:flex;align-items:center;justify-content:center;
+  transition:transform var(--dur-slow) ease-out;margin-bottom:2px;
+}
+.cast-cell svg{width:100%;height:auto;max-height:210px}
+.cast-cell .nm{font-size:19px;font-weight:800;margin-top:2px}
+.cast-cell .ro{font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.35}
+.cast-cell .tier{
+  position:absolute;top:10px;left:10px;
+  font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;
+  background:rgba(107,123,153,.16);color:var(--ink-soft);
+}
+.cast-cell .tier.p{background:var(--action);color:var(--ink)}
+.cast-cell.tapable{cursor:pointer}
+.cast-cell.tapable:active{transform:translateY(3px)}
+.act-hint{
+  position:absolute;top:10px;right:10px;
+  font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;
+  background:var(--action);color:var(--ink);
+}
+.cast-foot{font-size:13px;color:var(--ink-soft);text-align:center}
+
+/* 장소 확인용 화면 */
+#s-scenes{padding:28px 26px 24px;gap:14px}
+/* 10곳이 되면서 2열로는 한 화면에 안 들어간다. 스크롤을 만들지 않고 3열로 바꾼다 */
+.scene-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-content:center}
+.scene-card{
+  position:relative;border-radius:20px;overflow:hidden;cursor:pointer;
+  border:none;padding:0;background:var(--surface);
+  box-shadow:0 6px 0 rgba(43,58,85,.12);
+  transition:transform var(--dur-instant) ease-out, box-shadow var(--dur-instant) ease-out;
+}
+.scene-card:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(43,58,85,.12)}
+.scene-card svg{width:100%;height:auto;display:block;filter:saturate(.85)}
+.scene-card .cap2{
+  position:absolute;left:12px;bottom:12px;
+  background:rgba(255,255,255,.94);color:var(--ink);
+  font-family:inherit;font-size:17px;font-weight:800;
+  padding:7px 14px;border-radius:12px;
+}
+.scene-card.sel{outline:5px solid var(--action);outline-offset:-5px}
+
+/* ───────────────────────── 시연용 바 (아이 화면 밖) ───────────────────────── */
+#demo{
+  width:820px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;
+  background:rgba(43,58,85,.9);border-radius:16px;padding:10px 14px;
+}
+#demo b{color:#fff;font-size:12px;letter-spacing:.02em;margin-right:4px}
+#demo button{
+  font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  background:#fff;color:#2B3A55;border:none;border-radius:9px;padding:7px 11px;
+}
+#demo button.alt{background:#FFC12E}
+#toast{
+  position:absolute;left:50%;bottom:44px;transform:translateX(-50%);
+  background:rgba(43,58,85,.94);color:#fff;padding:14px 22px;border-radius:18px;
+  font-size:18px;font-weight:700;opacity:0;transition:opacity var(--dur-normal);
+  pointer-events:none;max-width:640px;text-align:center;
+}
+#toast.on{opacity:1}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition-duration:1ms !important}
+  /* 입자는 애니메이션이 전부다. 정지하면 제자리에 굳으므로 아예 띄우지 않는다.
+     층 벌어짐은 1ms 로 완료되어 "열린 상태"가 정적으로 남는다 —
+     소리(sfx.open)는 모션이 아니므로 유지되어 청각이 대체 채널이 된다 */
+  .pat-burst{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div id="frame">
+
+  <!-- ═══════════ 1. 시작 ═══════════ -->
+  <section class="screen on" id="s-start">
+    <button class="parent-door" id="btn-parent" aria-label="보호자 화면">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#6B7B99" stroke-width="2.4" stroke-linecap="round">
+        <rect x="4" y="10.5" width="16" height="10" rx="3"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>
+      </svg>
+    </button>
+
+    <div class="start-hero">
+      <div id="hero-song" data-state="idle" data-emo="joy"></div>
+      <div class="hi txt">안녕! 나는 송편이야</div>
+      <div class="colors" id="colors"></div>
+    </div>
+
+    <div class="today">
+      <div class="who" id="today-who" data-state="idle"></div>
+      <div class="what">
+        <b class="txt">오늘은 <span style="color:var(--character)">싫다고 말하기</span></b>
+        <span class="txt" id="today-place">키즈카페에서 시루떡이랑 연습해요</span>
+      </div>
+    </div>
+
+    <button class="tap primary" id="btn-start" aria-label="시작하기">
+      <svg viewBox="0 0 24 24" width="76" height="76" fill="#2B3A55"><path d="M8 5.5v13l11-6.5z"/></svg>
+      <span class="cap txt">시작</span>
+    </button>
+
+    <div class="locked-row" id="locked-row" aria-hidden="true"></div>
+  </section>
+
+  <!-- ═══════════ 2~6. 대화 ═══════════ -->
+  <section class="screen" id="s-talk">
+    <div class="turnbar" id="turnbar"><i></i><i></i><i></i></div>
+
+    <div class="stage" id="stage">
+      <div class="scene" id="scene" aria-hidden="true"></div>
+      <div class="actor" id="a-song" data-state="idle"></div>
+      <div class="actor" id="a-other" data-state="idle"></div>
+    </div>
+
+    <div class="bubble">
+      <div class="name txt" id="bubble-name">송편</div>
+      <div class="line txt" id="bubble-line">—</div>
+    </div>
+
+    <div class="controls">
+      <button class="tap" id="btn-replay" aria-label="다시 듣기">
+        <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#2B3A55" stroke-width="2.6" stroke-linecap="round">
+          <path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/>
+        </svg>
+      </button>
+      <button id="btn-mic" class="idle" aria-label="말하기">
+        <span class="ring r1"></span><span class="ring r2"></span>
+        <svg viewBox="0 0 24 24" width="104" height="104" fill="#2B3A55">
+          <rect x="9" y="2.5" width="6" height="11" rx="3"/>
+          <path d="M6 11a6 6 0 0 0 12 0" fill="none" stroke="#2B3A55" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M12 17v4" fill="none" stroke="#2B3A55" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════ 7. 보상 ═══════════ -->
+  <section class="screen" id="s-reward">
+    <div id="reward-song" data-state="idle"></div>
+    <div class="cheer txt" id="cheer">잘 말했어!</div>
+    <div class="rainbow" id="rainbow"></div>
+    <div class="bye txt" id="bye">오늘 연습은 여기까지야</div>
+
+    <!-- 무지개떡 6층 완성 시에만 등장 — 뒤 레이어 (꿀수영장·꿀단지) -->
+    <div class="party party-bg" id="party" aria-hidden="true">
+      <div class="glow"></div>
+      <div class="pour" id="pour"></div>
+      <div class="pot" id="pot"></div>
+      <div class="pool">
+        <div class="pool-back"></div>
+        <div class="swimmers" id="swimmers"></div>
+        <div class="pool-front" id="pool-front"></div>
+      </div>
+      <!-- 떡메치기: 절구는 무지개떡 뒤(z1)에 깔린다 = 떡이 절구 위에 얹힌 모양 -->
+      <div class="mortar" id="mortar" aria-hidden="true"></div>
+    </div>
+    <button class="tap primary" id="btn-end" aria-label="끝내기">
+      <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#2B3A55" stroke-width="3" stroke-linecap="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <span class="cap txt">끝</span>
+    </button>
+    <!-- 앞 레이어 (꿀비·꿀폭죽). pointer-events 없음 — 끝 버튼을 막지 않는다 -->
+    <div class="party party-top" aria-hidden="true">
+      <div class="drops" id="drops"></div>
+      <div class="fx" id="fx"></div>
+      <!-- 인절미와 떡메는 떡 앞(z6)에 온다. 떡메 머리가 떡 뒤로 숨으면 타격이 안 보인다 -->
+      <div class="pounder" id="pounder"></div>
+      <div class="mallet" id="mallet"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 캐릭터 확인용 (아이 화면 아님) ═══════════ -->
+  <section class="screen" id="s-cast">
+    <div class="cast-head">
+      <b>캐릭터 확인용</b>
+      <div class="cast-rows">
+        <div class="cast-line"><span>상태</span><div class="cast-states" id="cast-states"></div></div>
+        <div class="cast-line"><span>감정</span><div class="cast-states" id="cast-emos"></div></div>
+      </div>
+    </div>
+    <div class="cast-grid" id="cast-grid"></div>
+    <div class="cast-foot">아이에게는 보이지 않는 화면입니다 · 상태·감정 버튼은 전원에게 적용 · <b>「눌러보기」</b> 카드는 그 캐릭터의 특기 동작이 재생됩니다</div>
+  </section>
+
+  <!-- ═══════════ 장소 확인용 (아이 화면 아님) ═══════════ -->
+  <section class="screen" id="s-scenes">
+    <div class="cast-head">
+      <b>장소 확인용</b>
+      <span class="cast-foot" style="text-align:right">카드를 누르면 그 장소에서 연습이 시작됩니다</span>
+    </div>
+    <div class="scene-grid" id="scene-grid"></div>
+    <div class="cast-foot">전부 인라인 SVG · 외부 이미지 0개 · 채도를 낮춰 캐릭터가 앞으로 오게 했습니다</div>
+  </section>
+
+  <div id="toast"></div>
+</div>
+
+<div id="demo">
+  <b>시연용 (아이 화면 아님)</b>
+  <button data-force="idle">idle</button>
+  <button data-force="listening">listening</button>
+  <button data-force="thinking">thinking</button>
+  <button data-force="speaking">speaking</button>
+  <button data-force="canthear">cantHear</button>
+  <button data-force="demo">시범</button>
+  <button class="alt" id="d-text">글자 끄기</button>
+  <button class="alt" id="d-other">상대역 바꾸기</button>
+  <button class="alt" id="d-open">마음 열기</button>
+  <button class="alt" id="d-cast">캐릭터 보기</button>
+  <button class="alt" id="d-scene">장소 보기</button>
+  <button class="alt" id="d-party">🍯 꿀파티</button>
+  <button class="alt" id="d-pool">🏊 꿀수영장</button>
+  <button class="alt" id="d-pound">🫓 떡메치기</button>
+  <button class="alt" id="d-wrong">틀린 답</button>
+  <button class="alt" id="d-reset">처음부터</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   또랑 목업 v1 — 상태기계 + 떡 캐릭터 SVG
+   규칙 출처: uiux기획/CLAUDE.md
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 대사 (전부 한 곳에 모은다 — CLAUDE.md 규칙 9) ────────────── */
+var LINES = {
+  intro:  { who:'송편',   t:'시루떡이 네 장난감을 가져가려고 해. 싫으면 싫다고 말해도 돼.' },
+  demoIn: { who:'송편',   t:'먼저 내가 어떻게 말하는지 보여줄게. 잘 봐.' },
+  /* 시범(덱 2단계) — 아이는 듣기만 한다. 단호하게 거절하고 상대가 물러나는 모범 시연.
+     이 3줄이 오간 뒤에야 아이 차례가 온다 */
+  demo: [
+    { who:'시루떡', emo:'angry', t:'그거 나 줘. 지금 당장!' },
+    { who:'송편',                t:'안 돼. 이건 내가 쓰고 있어.' },
+    { who:'시루떡', emo:'sad',   t:'알았어… 그럼 나중에 물어볼게.' }
+  ],
+  wait:   { who:'송편',   t:'조금만 기다려줘.' },
+  cant:   { who:'송편',   t:'잘 안 들려. 다시 말해줄래?' },
+  cheer:  { who:'송편',   t:'잘 말했어! 네 마음을 그대로 말했구나.' },
+  party:  { who:'송편',   t:'무지개떡을 다 모았어! 꿀파티다!' },
+  /* emo = 물어볼 때 상대 감정 / backEmo = 아이 말을 듣고 난 뒤 감정.
+     감정이 턴마다 바뀌는 게 이 시나리오의 핵심이다 — 화남 → 아쉬움 → 조심스러움 → 기쁨 */
+  turns: [
+    { emo:'angry', backEmo:'surprised',
+      ask:{who:'시루떡', t:'그거 나 줘. 지금 당장!'},
+      hint:{who:'송편', t:'"안 돼" 하고 말해볼까?'},
+      sup1:{who:'송편', t:'괜찮아. 짧게 해도 돼. "안 돼" 두 글자면 충분해.'},
+      sup2:{who:'송편', t:'같이 말해보자. 하나, 둘… "안 돼!"'},
+      back:{who:'시루떡', t:'어… 안 된다고? 치…'} },
+    { emo:'sad', backEmo:'none',
+      ask:{who:'시루떡', t:'조금만… 잠깐만 빌려주면 안 돼?'},
+      hint:{who:'송편', t:'싫으면 다시 한 번 말해도 괜찮아.'},
+      sup1:{who:'송편', t:'마음이 안 바뀌었으면 그대로 말해도 돼. "싫어."'},
+      sup2:{who:'송편', t:'같이 말해보자. 하나, 둘… "싫어!"'},
+      back:{who:'시루떡', t:'알았어. 네가 싫다면 안 가져갈게.'} },
+    { emo:'shy', backEmo:'joy',
+      ask:{who:'시루떡', t:'그럼… 나도 같이 놀아도 돼?'},
+      hint:{who:'송편', t:'같이 놀고 싶으면 "좋아"라고 해봐.'},
+      sup1:{who:'송편', t:'놀고 싶으면 "좋아", 아니면 "지금은 싫어"라고 해도 돼.'},
+      sup2:{who:'송편', t:'같이 말해보자. 하나, 둘… "좋아!"'},
+      back:{who:'시루떡', t:'고마워! 같이 노니까 훨씬 재밌다!'} }
+  ]
+};
+
+/* ── 캐릭터 SVG ──────────────────────────────────────────────── */
+function star(x,y){
+  return '<path transform="translate('+x+','+y+')" d="M0,-9 L2.5,-2.5 L9,0 L2.5,2.5 L0,9 L-2.5,2.5 L-9,0 L-2.5,-2.5 Z"/>';
+}
+/* 얼굴 = 눈썹 + 눈(보통/웃는호) + 입 7종 + 부속(볼·눈물·땀·반짝·김).
+   무엇이 보일지는 CSS 가 data-state(기능) / data-emo(감정) 로 정한다 */
+function face(cx, cy, sp, r){
+  var by = cy - 27;
+  return '<g class="face">'
+    /* 눈썹 — 감정이 있을 때만 보인다. 감정의 8할은 눈썹이 만든다 */
+    + '<g class="brows">'
+    +   '<path class="brow bl" d="M'+(cx-sp-15)+','+by+' q15,-9 30,0"/>'
+    +   '<path class="brow br" d="M'+(cx+sp-15)+','+by+' q15,-9 30,0"/>'
+    + '</g>'
+    + '<g class="eyes">'
+    +   '<ellipse class="eye" cx="'+(cx-sp)+'" cy="'+cy+'" rx="'+r+'" ry="'+(r*1.2)+'"/>'
+    +   '<ellipse class="eye" cx="'+(cx+sp)+'" cy="'+cy+'" rx="'+r+'" ry="'+(r*1.2)+'"/>'
+    +   '<path class="eye-arc" d="M'+(cx-sp-11)+','+(cy+3)+' q11,-15 22,0"/>'
+    +   '<path class="eye-arc" d="M'+(cx+sp-11)+','+(cy+3)+' q11,-15 22,0"/>'
+    + '</g>'
+    + '<path class="mouth m-smile" d="M'+(cx-16)+','+(cy+24)+' q16,16 32,0"/>'
+    + '<path class="mouth m-flat"  d="M'+(cx-13)+','+(cy+28)+' h26"/>'
+    + '<ellipse class="mouth m-open" cx="'+cx+'" cy="'+(cy+30)+'" rx="14" ry="12"/>'
+    + '<path class="mouth m-grin"  d="M'+(cx-21)+','+(cy+21)+' q21,28 42,0 Z"/>'
+    + '<path class="mouth m-frown" d="M'+(cx-15)+','+(cy+33)+' q15,-15 30,0"/>'
+    + '<path class="mouth m-wavy"  d="M'+(cx-18)+','+(cy+28)+' q9,-9 18,0 q9,9 18,0"/>'
+    + '<ellipse class="mouth m-o"  cx="'+cx+'" cy="'+(cy+29)+'" rx="9" ry="12"/>'
+    + '<g class="extras">'
+    +   '<g class="blush">'
+    +     '<ellipse cx="'+(cx-sp-15)+'" cy="'+(cy+16)+'" rx="12" ry="7"/>'
+    +     '<ellipse cx="'+(cx+sp+15)+'" cy="'+(cy+16)+'" rx="12" ry="7"/>'
+    +   '</g>'
+    +   '<path class="tear"  d="M'+(cx-sp)+','+(cy+13)+' c-6,9 -9,13 -9,17 a9,9 0 0 0 18,0 c0,-4 -3,-8 -9,-17 Z"/>'
+    +   '<path class="sweat" d="M'+(cx+sp+22)+','+(cy-36)+' c-5,8 -8,11 -8,15 a8,8 0 0 0 16,0 c0,-4 -3,-7 -8,-15 Z"/>'
+    +   '<g class="spark">'+star(cx-sp-28,cy-32)+star(cx+sp+28,cy-36)+star(cx+sp+20,cy+26)+'</g>'
+    + '</g>'
+    + '</g>';
+}
+function dots(x,y){
+  return '<g class="dots">'
+    + '<circle cx="'+x+'" cy="'+y+'" r="7" fill="#6B7B99"/>'
+    + '<circle cx="'+(x+20)+'" cy="'+y+'" r="7" fill="#6B7B99"/>'
+    + '<circle cx="'+(x+40)+'" cy="'+y+'" r="7" fill="#6B7B99"/>'
+    + '</g>';
+}
+function hand(x,y,c){
+  c = c || 'var(--song-body-d)';
+  return '<g class="hand">'
+    + '<ellipse cx="'+x+'" cy="'+y+'" rx="20" ry="16" fill="'+c+'"/>'
+    + '<ellipse cx="'+x+'" cy="'+y+'" rx="9" ry="7" fill="'+c+'" opacity=".55"/>'
+    + '</g>';
+}
+
+/* 송편 — 반달. 색은 아이가 고른다 (쑥·흰·분홍) */
+function svgSongpyeon(body, dark){
+  body = body || 'var(--song-body)';
+  dark = dark || 'var(--song-body-d)';
+  return '<svg viewBox="0 0 220 220">'
+   + '<g class="body">'
+   +  '<path d="M26,150 C26,74 68,32 110,32 C152,32 194,74 194,150 C194,166 160,174 110,174 C60,174 26,166 26,150 Z" fill="'+body+'"/>'
+   +  '<path d="M26,150 C26,166 60,174 110,174 C160,174 194,166 194,150 C194,158 160,164 110,164 C60,164 26,158 26,150 Z" fill="'+dark+'"/>'
+   +  '<path d="M70,58 q40,-22 80,0" fill="none" stroke="'+dark+'" stroke-width="7" stroke-linecap="round"/>'
+   /* 깨소금 — 고채도 포인트 */
+   +  '<circle cx="62" cy="112" r="6" fill="var(--action)"/>'
+   +  '<circle cx="160" cy="98" r="5" fill="var(--action)"/>'
+   +  '<circle cx="140" cy="140" r="4.5" fill="var(--action)"/>'
+   +  '<circle cx="84" cy="150" r="3.5" fill="#E9A8BC"/>'
+   +  '<circle cx="176" cy="132" r="3" fill="#E9A8BC"/>'
+   +  face(110,108,26,9)
+   +  hand(30,104,dark)
+   + '</g>'
+   + dots(90,18)
+   + '</svg>';
+}
+
+/* 송편 색 — 실제 송편이 쑥·흰·분홍인 것을 그대로 쓴다.
+   ⚠ CLAUDE.md 3절은 분홍을 금지하지만, 사용자가 이 건에 한해 명시적으로 허용했다.
+   성별로 나누는 색이 아니라 아이가 직접 고르는 선택지라는 점이 근거다. */
+var SONG_COLORS=[
+  { k:'green', nm:'쑥',   body:'#A8CE86', dark:'#8FBB6C' },
+  { k:'white', nm:'흰',   body:'#F7F2E7', dark:'#E2D9C6' },
+  { k:'pink',  nm:'분홍', body:'#F4B6C6', dark:'#E29AAE' }
+];
+function songColorByKey(k){
+  for(var i=0;i<SONG_COLORS.length;i++) if(SONG_COLORS[i].k===k) return SONG_COLORS[i];
+  return SONG_COLORS[0];
+}
+/* 시루떡 — 켜켜이 층 + 팥고물. 악당 아님 */
+function svgSirutteok(){
+  return '<svg viewBox="0 0 240 240">'
+   + '<g class="body">'
+   +  '<rect class="lay1" x="34" y="62"  width="172" height="72" rx="18" fill="var(--siru-cake)"/>'
+   +  '<rect class="pat"  x="34" y="134" width="172" height="14" rx="6"  fill="var(--siru-pat)"/>'
+   +  '<rect class="lay2" x="34" y="148" width="172" height="32" rx="13" fill="var(--siru-cake)"/>'
+   +  '<rect class="pat"  x="34" y="180" width="172" height="14" rx="6"  fill="var(--siru-pat)"/>'
+   +  '<rect class="lay3" x="34" y="194" width="172" height="32" rx="13" fill="var(--siru-cake)"/>'
+   +  face(120,96,28,9)
+   + '</g>'
+   /* 마음이 열릴 때 팥고물 6알이 좌우로 톡 튄다. 국소·소량·섬광 없음 —
+      화면 전체를 덮는 꿀폭죽(20알+섬광)과 성격을 갈라 놓는다 */
+   + patBurst()
+   + dots(98,60)
+   + '</svg>';
+}
+function patBurst(){
+  var P=[[-46,-26],[-30,-40],[46,-24],[32,-42],[-52,4],[52,2]];
+  return '<g class="pat-burst">' + P.map(function(p,i){
+    return '<circle cx="120" cy="'+(i%2 ? 180 : 140)+'" r="'+(4+(i%3))+'" fill="var(--siru-pat)"'
+      + ' style="--dx:'+p[0]+'px;--dy:'+p[1]+'px;animation-delay:'+(i*.035).toFixed(3)+'s"/>';
+  }).join('') + '</g>';
+}
+/* 가래떡 — 길쭉 + 조청 모자. 말할 때 몸이 세로로 늘어난다 */
+function svgGaraetteok(){
+  return '<svg viewBox="0 0 200 200">'
+   + '<g class="body gara">'
+   +  '<rect x="66" y="52" width="68" height="132" rx="34" fill="var(--gara-body)"/>'
+   +  '<path d="M66,74 a34,34 0 0 1 68,0 z" fill="var(--character)"/>'
+   +  face(100,108,20,7)
+   + '</g></svg>';
+}
+/* 인절미 — 네모+둥근 모서리, 콩고물 */
+function svgInjeolmi(){
+  return '<svg viewBox="0 0 200 200">'
+   + '<g class="body">'
+   +  '<rect x="44" y="60" width="112" height="112" rx="34" fill="var(--injeol-body)"/>'
+   +  '<circle cx="66" cy="86" r="5" fill="var(--injeol-dust)"/>'
+   +  '<circle cx="140" cy="76" r="4" fill="var(--injeol-dust)"/>'
+   +  '<circle cx="132" cy="150" r="5" fill="var(--injeol-dust)"/>'
+   +  '<circle cx="60" cy="146" r="4" fill="var(--injeol-dust)"/>'
+   +  face(100,112,20,7)
+   + '</g></svg>';
+}
+/* 꿀떡 — 가장 작다. 누르면 속 꿀이 차오르며 한 방울 흘러넘친다 */
+function svgKkultteok(){
+  return '<svg viewBox="0 0 200 200">'
+   + '<g class="body">'
+   +  '<circle cx="100" cy="122" r="52" fill="var(--kkul-body)"/>'
+   +  '<ellipse class="kk-honey" cx="100" cy="134" rx="26" ry="18" fill="var(--kkul-honey)" opacity=".55"/>'
+   +  face(100,116,17,6)
+   +  '<path class="kk-drip" d="M100,168 c-5,8 -8,11 -8,15 a8,8 0 0 0 16,0 c0,-4 -3,-7 -8,-15 Z" fill="var(--kkul-honey)"/>'
+   + '</g></svg>';
+}
+/* 약과 — 꽃 각인. 좌/우 꽃잎을 나눠 두어 '갈라졌다 붙는' 화해 연출이 가능하다 */
+function svgYakgwa(){
+  var L='', R='', C='';
+  for(var i=0;i<8;i++){
+    var a=i*Math.PI/4,
+        x=100+Math.cos(a)*36, y=118+Math.sin(a)*36,
+        c='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="20" fill="var(--yakgwa-body)"/>';
+    if(x<99) L+=c; else if(x>101) R+=c; else C+=c;
+  }
+  return '<svg viewBox="0 0 200 200"><g class="body">'
+   + '<g class="yk-syrup">'
+   +   '<path d="M100,86 q-7,16 0,32 q7,16 0,32" fill="none" stroke="var(--kkul-honey)" stroke-width="7" stroke-linecap="round"/>'
+   +   '<path d="M100,96 q6,14 0,28"  fill="none" stroke="#F3D08A" stroke-width="4" stroke-linecap="round"/>'
+   + '</g>'
+   + '<g class="yk-l">'+L+'</g>'
+   + '<g class="yk-r">'+R+'</g>'
+   + '<g class="yk-c">'+C+'<circle cx="100" cy="118" r="40" fill="#EFC98F"/></g>'
+   + face(100,112,18,6.5)
+   + '</g></svg>';
+}
+/* 백설기 — 하얀 네모 + 김 */
+function svgBaekseolgi(){
+  return '<svg viewBox="0 0 200 200">'
+   + '<path d="M76,54 q-12,-16 0,-30" fill="none" stroke="var(--ink-soft)" stroke-width="7" stroke-linecap="round" opacity=".5"/>'
+   + '<path d="M100,50 q-12,-18 0,-34" fill="none" stroke="var(--ink-soft)" stroke-width="7" stroke-linecap="round" opacity=".38"/>'
+   + '<path d="M124,54 q-12,-16 0,-30" fill="none" stroke="var(--ink-soft)" stroke-width="7" stroke-linecap="round" opacity=".5"/>'
+   + '<g class="body">'
+   +  '<rect x="46" y="66" width="108" height="106" rx="26" fill="var(--baek-body)"/>'
+   +  face(100,116,19,7)
+   + '</g></svg>';
+}
+/* 무지개떡 — 보상 오브젝트. 층이 하나씩 채워진다 */
+var RAINBOW = ['#E86A6A','#FF9F45','var(--action)','var(--success)','#5AA9E6','#9B7BD4'];
+function svgRainbow(){
+  var s='<svg viewBox="0 0 240 240" class="rb">'
+      + '<ellipse cx="120" cy="222" rx="92" ry="12" fill="var(--ink-soft)" opacity=".14"/>';
+  for(var i=0;i<6;i++){
+    var w=172-i*7, x=(240-w)/2, y=192-i*27;
+    s+='<rect class="rl" data-i="'+i+'" x="'+x+'" y="'+y+'" width="'+w+'" height="25" rx="11" fill="'+RAINBOW[i]+'"/>';
+  }
+  /* 6층을 다 모으면 위에서 꿀이 덮인다 (꿀파티) */
+  /* 층을 가리지 않는다 — 맨 위에 얹히고 옆으로 흘러내리는 폭만 */
+  s+='<g class="honey-coat">'
+   +   '<path fill="#F0B440" opacity=".92" d="M46,50 H194 V74'
+   +     ' q-9.25,22 -18.5,0 q-9.25,36 -18.5,0 q-9.25,17 -18.5,0 q-9.25,42 -18.5,0'
+   +     ' q-9.25,20 -18.5,0 q-9.25,31 -18.5,0 q-9.25,15 -18.5,0 q-9.25,27 -18.5,0 Z"/>'
+   +   '<ellipse cx="102" cy="59" rx="28" ry="6" fill="#FFF1C9" opacity=".6"/>'
+   + '</g>';
+  return s+'</svg>';
+}
+
+/* ══════════════ 배경 장소 (인라인 SVG, 외부 이미지 0) ══════════════
+   실제 장소를 알아볼 수 있게 그리되 채도는 낮게 간다. 주인공은 캐릭터이고
+   배경이 시선을 뺏으면 안 된다 (CLAUDE.md 3절) */
+function sc(wall, floorY, floor, inner){
+  return '<svg viewBox="0 0 820 560" preserveAspectRatio="xMidYMax slice">'
+   + '<rect width="820" height="560" fill="'+wall+'"/>'
+   + '<rect y="'+floorY+'" width="820" height="'+(560-floorY)+'" fill="'+floor+'"/>'
+   + inner + '</svg>';
+}
+function rep(n, fn){ var s=''; for(var i=0;i<n;i++) s+=fn(i); return s; }
+
+/* 편의점 — 냉장 진열장 + 곤돌라 + 계산대 */
+function scCvs(){
+  var s='<rect x="110" y="24" width="250" height="14" rx="7" fill="#FFF7DC"/>'
+      + '<rect x="460" y="24" width="250" height="14" rx="7" fill="#FFF7DC"/>';
+  s+=rep(3,function(i){ var x=26+i*106;
+    return '<rect x="'+x+'" y="150" width="96" height="252" rx="8" fill="#D6E7F1" stroke="#B4CBDA" stroke-width="4"/>'
+      + rep(4,function(r){ return '<rect x="'+(x+8)+'" y="'+(232+r*40)+'" width="80" height="7" rx="3" fill="#B4CBDA"/>'
+        + rep(4,function(b){ return '<rect x="'+(x+10+b*20)+'" y="'+(202+r*40)+'" width="15" height="30" rx="5" fill="'+
+          ['#EFB6AE','#BEDCC3','#F2DCA4','#C3C7E8'][(r+b)%4]+'"/>'; }); });
+  });
+  s+='<rect x="384" y="238" width="222" height="164" rx="6" fill="#E7E2D6"/>'
+   + rep(3,function(r){ return '<rect x="390" y="'+(288+r*38)+'" width="210" height="7" rx="3" fill="#CFC8B8"/>'
+     + rep(7,function(b){ return '<rect x="'+(394+b*29)+'" y="'+(262+r*38)+'" width="22" height="26" rx="4" fill="'+
+       ['#E9C0B8','#C7DDCB','#EFDDAE','#CBCFEA','#DCC9E4'][(r*2+b)%5]+'"/>'; }); });
+  s+='<rect x="648" y="290" width="150" height="112" rx="8" fill="#DCD6E6"/>'
+   + '<rect x="660" y="238" width="126" height="52" rx="6" fill="#EDE9F4"/>'
+   + '<rect x="676" y="250" width="94" height="30" rx="4" fill="#9FB6D8"/>'
+   + '<rect x="640" y="120" width="166" height="46" rx="8" fill="#BFD9C7"/>';
+  s+=rep(6,function(i){ return '<path d="M'+(i*164)+',402 L'+(i*164+120)+',560" stroke="#CBD4D8" stroke-width="3" fill="none"/>'; });
+  return sc('#EEF3F4', 402, '#DBE2E5', s);
+}
+
+/* 무인문방구 — 벽면 문구 진열 + 셀프 결제 키오스크 */
+function scStat(){
+  var s='<rect x="30" y="120" width="250" height="282" rx="8" fill="#EDE7F6" stroke="#D3C9E6" stroke-width="4"/>'
+   + rep(4,function(r){ return '<rect x="36" y="'+(190+r*54)+'" width="238" height="7" rx="3" fill="#D3C9E6"/>'
+     + rep(6,function(b){ return '<rect x="'+(42+b*39)+'" y="'+(154+r*54)+'" width="28" height="36" rx="3" fill="'+
+       ['#F3C9A8','#AFD3E8','#F0DCA0','#C8E2C0','#DCC2E4','#EFB6B0'][(r+b)%6]+'"/>'; }); });
+  s+='<rect x="540" y="120" width="250" height="282" rx="8" fill="#EDE7F6" stroke="#D3C9E6" stroke-width="4"/>'
+   + rep(4,function(r){ return '<rect x="546" y="'+(190+r*54)+'" width="238" height="7" rx="3" fill="#D3C9E6"/>'
+     + rep(9,function(b){ return '<rect x="'+(552+b*26)+'" y="'+(152+r*54)+'" width="9" height="38" rx="4" fill="'+
+       ['#E8A0A8','#8FC6E0','#F0CE7A','#9ED2A6','#B9A6DE'][(r*3+b)%5]+'"/>'; }); });
+  /* 셀프 결제 키오스크 */
+  s+='<rect x="350" y="236" width="128" height="166" rx="10" fill="#DDD7EA"/>'
+   + '<rect x="362" y="252" width="104" height="80" rx="7" fill="#7FA8D4"/>'
+   + '<rect x="376" y="268" width="76" height="9" rx="4" fill="#DCE8F5"/>'
+   + '<rect x="376" y="286" width="52" height="9" rx="4" fill="#DCE8F5"/>'
+   + '<rect x="380" y="348" width="68" height="28" rx="6" fill="#F0C64A"/>'
+   + '<rect x="336" y="150" width="156" height="42" rx="8" fill="#C7BCE4"/>'
+   + '<rect x="352" y="164" width="124" height="14" rx="7" fill="#EDE9F6"/>';
+  /* 천장등 + 벽 포스터 */
+  s+='<rect x="120" y="26" width="240" height="13" rx="6" fill="#FFF7DC"/>'
+   + '<rect x="460" y="26" width="240" height="13" rx="6" fill="#FFF7DC"/>'
+   + rep(2,function(i){ var x=308+i*106;
+      return '<rect x="'+x+'" y="58" width="90" height="70" rx="6" fill="#FBF7FF" stroke="#D3C9E6" stroke-width="3"/>'
+        + '<rect x="'+(x+12)+'" y="72" width="66" height="10" rx="5" fill="'+['#F0B4AC','#9FC6EA'][i]+'"/>'
+        + '<rect x="'+(x+12)+'" y="90" width="44" height="8" rx="4" fill="#D3C9E6"/>'
+        + '<rect x="'+(x+12)+'" y="104" width="56" height="8" rx="4" fill="#D3C9E6"/>'; });
+  return sc('#F5F1FA', 402, '#E3DCEF', s);
+}
+
+/* 영화관 — 스크린 + 좌석 열. 검정을 면적색으로 쓰지 않는다 */
+function scCinema(){
+  var s='<rect x="86" y="52" width="648" height="264" rx="10" fill="#4E4C74"/>'
+   + '<rect x="98" y="64" width="624" height="240" rx="6" fill="#EFEADC"/>'
+   + '<rect x="150" y="104" width="290" height="18" rx="9" fill="#D8D0BC"/>'
+   + '<rect x="150" y="140" width="410" height="18" rx="9" fill="#D8D0BC"/>'
+   + '<rect x="150" y="176" width="210" height="18" rx="9" fill="#D8D0BC"/>';
+  /* 좌석 2열 */
+  s+=rep(7,function(i){ var x=48+i*112;
+    return '<path d="M'+x+',408 v-42 a26,26 0 0 1 52,0 v42 z" fill="#5F5C88"/>'
+         + '<rect x="'+(x-8)+'" y="372" width="16" height="40" rx="7" fill="#55527C"/>'; });
+  s+=rep(6,function(i){ var x=104+i*112;
+    return '<path d="M'+x+',508 v-52 a30,30 0 0 1 60,0 v52 z" fill="#6E6B98"/>'
+         + '<rect x="'+(x-9)+'" y="466" width="18" height="46" rx="8" fill="#5F5C88"/>'; });
+  s+=rep(9,function(i){ return '<circle cx="'+(30+i*98)+'" cy="536" r="5" fill="#F2E2A8"/>'; });
+  return sc('#6B6894', 336, '#5A5782', s);
+}
+
+/* 백화점 — 에스컬레이터 + 매장 간판 + 대리석 바닥 */
+function scDept(){
+  var s=rep(3,function(i){ return '<circle cx="'+(180+i*230)+'" cy="60" r="26" fill="#FBF6E4"/>'; });
+  s+='<rect x="60" y="128" width="196" height="58" rx="10" fill="#D9C8DE"/>'
+   + '<rect x="300" y="128" width="196" height="58" rx="10" fill="#C9D6E4"/>'
+   + '<rect x="540" y="128" width="196" height="58" rx="10" fill="#D8DCC6"/>'
+   + rep(3,function(i){ return '<rect x="'+(88+i*240)+'" y="148" width="140" height="18" rx="9" fill="#F4F0F6"/>'; });
+  /* 에스컬레이터 */
+  s+='<path d="M470,410 L790,214 L790,268 L470,462 Z" fill="#DAD3E2"/>'
+   + '<path d="M470,462 L790,268 L790,290 L470,484 Z" fill="#C3BBD0"/>'
+   + rep(11,function(i){ return '<path d="M'+(480+i*28)+','+(456-i*17)+' l26,-16" stroke="#B4AAC4" stroke-width="4" fill="none"/>'; })
+   + '<path d="M470,382 L790,186" stroke="#EDE8F2" stroke-width="12" fill="none" stroke-linecap="round"/>';
+  /* 매장 유리창 + 마네킹 실루엣 */
+  s+='<rect x="40" y="196" width="200" height="206" rx="8" fill="#EDE8F2" stroke="#D6CDE2" stroke-width="4"/>'
+   + '<rect x="272" y="196" width="176" height="206" rx="8" fill="#EDE8F2" stroke="#D6CDE2" stroke-width="4"/>';
+  s+=rep(3,function(i){ var x=[92,178,336][i], sc2=[1,.86,.94][i];
+    return '<g transform="translate('+x+',402) scale('+sc2+')">'
+      + '<path d="M-26,0 L-18,-96 h36 L26,0 Z" fill="'+['#C6B6D8','#B6C4D8','#CBBFA8'][i]+'"/>'
+      + '<circle cx="0" cy="-116" r="17" fill="#D8CFE2"/>'
+      + '<rect x="-4" y="-104" width="8" height="12" fill="#D8CFE2"/></g>'; });
+  /* 화분 */
+  s+=rep(2,function(i){ var x=478+i*-2;
+    return '<path d="M'+(x-24)+',402 l6,-46 h36 l6,46 z" fill="#C9BCA6"/>'
+      + '<ellipse cx="'+x+'" cy="336" rx="34" ry="26" fill="#A9C4A0"/>'
+      + '<ellipse cx="'+(x-20)+'" cy="352" rx="22" ry="16" fill="#B8D0AE"/>'; });
+  /* 유리 난간 */
+  s+='<rect x="40" y="300" width="380" height="10" rx="5" fill="#CFC7DC" opacity=".9"/>'
+   + rep(8,function(i){ return '<rect x="'+(48+i*46)+'" y="310" width="6" height="92" fill="#E2DCEC" opacity=".7"/>'; });
+  s+=rep(5,function(i){ return '<path d="M0,'+(430+i*30)+' H820" stroke="#DDD6E4" stroke-width="2"/>'; });
+  return sc('#F6F2F8', 412, '#E9E3EE', s);
+}
+
+/* 생활용품점 — 좁은 통로 + 노란 가격표가 빼곡한 진열대 */
+function scVariety(){
+  function rack(x,w){
+    return '<rect x="'+x+'" y="120" width="'+w+'" height="286" rx="6" fill="#F6EFDD" stroke="#E0D3B4" stroke-width="4"/>'
+      + rep(5,function(r){ return '<rect x="'+(x+6)+'" y="'+(174+r*48)+'" width="'+(w-12)+'" height="7" rx="3" fill="#E0D3B4"/>'
+        + rep(Math.floor((w-14)/26),function(b){ return '<rect x="'+(x+10+b*26)+'" y="'+(146+r*48)+'" width="20" height="28" rx="3" fill="'+
+            ['#EFB4AC','#9FCBE4','#F2D488','#A8D9AE','#C6B4E2','#F0A9C4'][(r*2+b)%6]+'"/>'
+          + '<rect x="'+(x+10+b*26)+'" y="'+(174+r*48)+'" width="20" height="9" rx="2" fill="#FFD64A"/>'; }); });
+  }
+  var s=rack(20,300)+rack(500,300)
+   + '<rect x="340" y="60" width="140" height="40" rx="8" fill="#FFD64A"/>'
+   + '<rect x="356" y="74" width="108" height="12" rx="6" fill="#FFF6DC"/>';
+  s+=rep(5,function(i){ return '<path d="M330,'+(420+i*30)+' H490" stroke="#DFD7C6" stroke-width="2"/>'; });
+  return sc('#FFF9EC', 406, '#EDE6D6', s);
+}
+
+/* 키즈카페 — 무지개 벽화 + 가랜드 + 볼풀 + 미끄럼틀 */
+function scKids(){
+  var RB=['#F3A9A0','#F6C87A','#F2E29A','#A8D9AE','#9FC6EA'];
+  /* 벽 무지개 벽화 */
+  var s=rep(5,function(i){ var r=176-i*24;
+    return '<path d="M'+(250-r)+',330 a'+r+','+r+' 0 0 1 '+(r*2)+',0" fill="none" stroke="'+RB[i]+'" stroke-width="21" opacity=".42"/>'; });
+  /* 가랜드 (삼각 깃발) */
+  s+='<path d="M0,44 Q205,104 410,52 Q615,100 820,40" fill="none" stroke="#D8C6AE" stroke-width="4"/>';
+  s+=rep(14,function(i){ var x=24+i*58, y=52+Math.sin(i*0.9)*20;
+    return '<path d="M'+(x-15)+','+y+' h30 l-15,34 z" fill="'+RB[i%5]+'" opacity=".8"/>'; });
+  /* 구름 */
+  s+=rep(2,function(i){ var x=470+i*250, y=150+(i%2)*40;
+    return '<ellipse cx="'+x+'" cy="'+y+'" rx="60" ry="28" fill="#FFFFFF" opacity=".8"/>'
+         + '<ellipse cx="'+(x-36)+'" cy="'+(y+8)+'" rx="34" ry="20" fill="#FFFFFF" opacity=".8"/>'
+         + '<ellipse cx="'+(x+34)+'" cy="'+(y+10)+'" rx="30" ry="18" fill="#FFFFFF" opacity=".8"/>'; });
+  /* 풍선 */
+  s+=rep(3,function(i){ var x=612+i*68, y=246+(i%2)*44;
+    return '<path d="M'+x+','+(y+30)+' v46" stroke="#D8C6AE" stroke-width="3" fill="none"/>'
+         + '<ellipse cx="'+x+'" cy="'+y+'" rx="26" ry="31" fill="'+RB[(i+1)%5]+'"/>'
+         + '<ellipse cx="'+(x-8)+'" cy="'+(y-10)+'" rx="7" ry="9" fill="#FFFFFF" opacity=".55"/>'; });
+  /* 미끄럼틀 — 오른쪽 */
+  s+='<rect x="700" y="196" width="98" height="118" rx="14" fill="#9FD3C0"/>'
+   + '<rect x="712" y="208" width="74" height="46" rx="8" fill="#C8E8DC"/>'
+   + '<path d="M596,392 C596,282 664,250 748,250 L748,314 C700,314 664,340 664,392 Z" fill="#F6C98E"/>'
+   + '<path d="M624,392 C624,300 678,276 748,276 L748,300 C700,300 692,336 692,392 Z" fill="#FFE3BB"/>'
+   + rep(5,function(i){ return '<rect x="'+(800+i*0)+'" y="'+(314+i*16)+'" width="0" height="0"/>'; });
+  /* 볼풀 — 왼쪽, 크게 */
+  s+='<path d="M22,392 h396 v-74 a22,22 0 0 0 -22,-22 h-352 a22,22 0 0 0 -22,22 z" fill="#B9DCEA"/>'
+   + '<path d="M22,318 h396" stroke="#8FC2D6" stroke-width="7" stroke-linecap="round" fill="none"/>';
+  s+=rep(39,function(i){ var col=i%13, row=Math.floor(i/13);
+    return '<circle cx="'+(48+col*29)+'" cy="'+(332+row*25)+'" r="14" fill="'+RB[(i*3)%5]+'"/>'; });
+  /* 굴러나온 공 2개 */
+  s+='<circle cx="452" cy="440" r="17" fill="'+RB[0]+'"/><circle cx="500" cy="470" r="13" fill="'+RB[3]+'"/>';
+  /* 바닥 매트 */
+  s+=rep(9,function(i){ return '<path d="M'+(i*100)+',392 v168" stroke="#F2DEBE" stroke-width="3"/>'; })
+   + rep(3,function(i){ return '<path d="M0,'+(440+i*54)+' H820" stroke="#F2DEBE" stroke-width="3"/>'; });
+  return sc('#FFF3E4', 392, '#FBE9CC', s);
+}
+
+/* ── 교실(유치원) · 놀이터 ────────────────────────────────────────
+   이 둘은 예선 기획서 4슬라이드가 **5단계(실사)** 장소로 지목한 곳이다.
+   1~4단계에서 한 번도 가보지 않은 장소가 5단계에서 처음 나오면
+   "연습한 맥락 → 실전 맥락" 전이가 성립하지 않는다. 그래서 SVG 로도 만들어
+   같은 장소를 SVG → 실사로 넘긴다.                                      */
+
+/* 교실 — 칠판 + 책상 + 사물함 + 게시판 */
+function scClass(){
+  var PB=['#F3A9A0','#F6C87A','#A8D9AE','#9FC6EA','#C6B5E4'];
+  /* 칠판 — 검정·짙은 초록을 쓰지 않는다(면적색 금지). 옅은 민트 화이트보드로 */
+  var s='<rect x="150" y="70" width="430" height="216" rx="14" fill="#E6F3EC"/>'
+      + '<rect x="150" y="70" width="430" height="216" rx="14" fill="none" stroke="#C9DED4" stroke-width="8"/>'
+      + '<rect x="196" y="120" width="180" height="12" rx="6" fill="#BFD6CB"/>'
+      + '<rect x="196" y="152" width="290" height="12" rx="6" fill="#CFE3D8"/>'
+      + '<rect x="196" y="184" width="120" height="12" rx="6" fill="#CFE3D8"/>'
+      + '<rect x="150" y="286" width="430" height="14" rx="7" fill="#EFE3CC"/>';
+  /* 게시판 — 아이들 그림 */
+  s+='<rect x="618" y="92" width="176" height="150" rx="12" fill="#FBEFD8"/>'
+   + rep(4,function(i){ var x=634+(i%2)*86, y=108+Math.floor(i/2)*70;
+     return '<rect x="'+x+'" y="'+y+'" width="70" height="56" rx="6" fill="'+PB[i%5]+'" opacity=".62"/>'; });
+  /* 사물함 — 왼쪽 */
+  s+=rep(6,function(i){ var x=22+(i%2)*66, y=150+Math.floor(i/2)*54;
+    return '<rect x="'+x+'" y="'+y+'" width="58" height="46" rx="8" fill="'+PB[i%5]+'" opacity=".5"/>'
+         + '<circle cx="'+(x+46)+'" cy="'+(y+23)+'" r="4" fill="#D8C6AE"/>'; });
+  /* 책상 3개 — 앞줄 */
+  s+=rep(3,function(i){ var x=96+i*230;
+    return '<rect x="'+x+'" y="404" width="184" height="20" rx="10" fill="#F6E6C8"/>'
+         + '<rect x="'+(x+16)+'" y="424" width="14" height="80" rx="7" fill="#E4D2B2"/>'
+         + '<rect x="'+(x+154)+'" y="424" width="14" height="80" rx="7" fill="#E4D2B2"/>'
+         + '<rect x="'+(x+58)+'" y="360" width="68" height="46" rx="10" fill="'+PB[(i+1)%5]+'" opacity=".55"/>'; });
+  return sc('#FFF8EE', 392, '#F3E4CB', s);
+}
+
+/* 놀이터 — 미끄럼틀 + 그네 + 모래밭 + 나무 */
+function scPlay(){
+  var s='';
+  /* 하늘 구름 */
+  s+=rep(3,function(i){ var x=120+i*300, y=78+(i%2)*44;
+    return '<ellipse cx="'+x+'" cy="'+y+'" rx="66" ry="30" fill="#FFFFFF" opacity=".85"/>'
+         + '<ellipse cx="'+(x-40)+'" cy="'+(y+10)+'" rx="38" ry="22" fill="#FFFFFF" opacity=".85"/>'
+         + '<ellipse cx="'+(x+38)+'" cy="'+(y+12)+'" rx="34" ry="20" fill="#FFFFFF" opacity=".85"/>'; });
+  /* 나무 — 왼쪽 */
+  s+='<rect x="76" y="270" width="26" height="130" rx="13" fill="#D9BE93"/>'
+   + '<ellipse cx="89" cy="248" rx="86" ry="66" fill="#A8CE86"/>'
+   + '<ellipse cx="46" cy="272" rx="52" ry="40" fill="#B8D998"/>'
+   + '<ellipse cx="132" cy="274" rx="48" ry="36" fill="#B8D998"/>';
+  /* 그네 — 가운데 */
+  s+='<path d="M330,392 L392,178 L454,392" fill="none" stroke="#EFC98F" stroke-width="14" stroke-linecap="round"/>'
+   + '<rect x="330" y="170" width="128" height="14" rx="7" fill="#E8B978"/>'
+   + '<path d="M362,184 v122 M422,184 v122" stroke="#D8C6AE" stroke-width="5"/>'
+   + '<rect x="352" y="306" width="80" height="16" rx="8" fill="#9FC6EA"/>';
+  /* 미끄럼틀 — 오른쪽 */
+  s+='<rect x="672" y="196" width="104" height="122" rx="14" fill="#9FD3C0"/>'
+   + '<rect x="686" y="210" width="76" height="46" rx="8" fill="#C8E8DC"/>'
+   + '<path d="M566,394 C566,282 636,250 722,250 L722,316 C674,316 636,342 636,394 Z" fill="#F6C98E"/>'
+   + '<path d="M594,394 C594,300 650,276 722,276 L722,300 C674,300 664,338 664,394 Z" fill="#FFE3BB"/>';
+  /* 모래밭 */
+  s+='<ellipse cx="410" cy="470" rx="330" ry="76" fill="#F5E2BE"/>'
+   + rep(9,function(i){ var x=140+i*66, y=440+(i%3)*26;
+     return '<circle cx="'+x+'" cy="'+y+'" r="4" fill="#E5CFA4"/>'; });
+  /* 굴러다니는 공 */
+  s+='<circle cx="238" cy="452" r="22" fill="#F3A9A0"/>'
+   + '<path d="M216,452 h44" stroke="#FFFFFF" stroke-width="5" opacity=".7"/>';
+  return sc('#EAF4FB', 392, '#B8D998', s);
+}
+
+/* 풋살장 — 인조잔디 + 골대 + 펜스 + 조명탑 */
+function scFutsal(){
+  var s=rep(10,function(i){ return i%2===0 ? '<rect x="'+(i*82)+'" y="300" width="82" height="260" fill="#7CAE68"/>' : ''; });
+  /* 펜스 */
+  s+=rep(28,function(i){ return '<path d="M'+(i*30)+',96 v204" stroke="#C4CDD4" stroke-width="3" opacity=".85"/>'; })
+   + rep(5,function(i){ return '<path d="M0,'+(110+i*40)+' H820" stroke="#C4CDD4" stroke-width="3" opacity=".85"/>'; })
+   + '<rect y="292" width="820" height="10" fill="#9FA9B2"/>';
+  /* 조명탑 */
+  s+=rep(2,function(i){ var x=90+i*640;
+    return '<rect x="'+(x-5)+'" y="30" width="10" height="266" fill="#A8B2BA"/>'
+         + '<rect x="'+(x-46)+'" y="16" width="92" height="30" rx="6" fill="#DCE4EA"/>'; });
+  /* 골대 */
+  s+='<rect x="292" y="176" width="238" height="128" rx="4" fill="none" stroke="#F4F7F9" stroke-width="9"/>'
+   + rep(9,function(i){ return '<path d="M'+(300+i*26)+',180 v120" stroke="#EAF0F4" stroke-width="2.5"/>'; })
+   + rep(5,function(i){ return '<path d="M296,'+(186+i*26)+' H526" stroke="#EAF0F4" stroke-width="2.5"/>'; });
+  /* 라인 */
+  s+='<path d="M0,338 H820" stroke="#F2F7F4" stroke-width="6"/>'
+   + '<path d="M230,560 a190,120 0 0 1 360,0" fill="none" stroke="#F2F7F4" stroke-width="6"/>';
+  return sc('#DCEAF4', 300, '#86B571', s);
+}
+
+/* 태권도장 — 매트 + 벽거울 + 띠 걸이 */
+function scDojang(){
+  var s='<rect x="40" y="96" width="330" height="204" rx="8" fill="#DCE6EE" stroke="#C0CBD6" stroke-width="6"/>'
+   + '<path d="M60,290 L200,116" stroke="#EDF3F8" stroke-width="18" opacity=".7" fill="none"/>'
+   + '<path d="M150,290 L280,116" stroke="#EDF3F8" stroke-width="12" opacity=".55" fill="none"/>';
+  /* 띠 걸이 */
+  s+='<rect x="430" y="120" width="352" height="10" rx="5" fill="#C7B79E"/>'
+   + rep(6,function(i){ var c=['#E3E0DA','#F2D785','#8FC49C','#8FAFD4','#C29BD4','#C98C7E'][i];
+     return '<path d="M'+(452+i*58)+',130 v78 q0,16 16,16 h10" stroke="'+c+'" stroke-width="13" fill="none" stroke-linecap="round"/>'; });
+  /* 격파판 거치대 */
+  s+='<rect x="600" y="256" width="150" height="14" rx="7" fill="#C7B79E"/>'
+   + '<rect x="612" y="212" width="42" height="44" rx="4" fill="#EFE6D4"/>'
+   + '<rect x="664" y="212" width="42" height="44" rx="4" fill="#EFE6D4"/>';
+  /* 벽 현수막 + 시계 */
+  s+='<rect x="40" y="34" width="500" height="44" rx="8" fill="#C98C7E" opacity=".55"/>'
+   + rep(3,function(i){ return '<rect x="'+(64+i*158)+'" y="48" width="112" height="16" rx="8" fill="#F7F2EA" opacity=".9"/>'; })
+   + '<circle cx="626" cy="56" r="26" fill="#F7F2EA" stroke="#C7B79E" stroke-width="5"/>'
+   + '<path d="M626,56 v-14 M626,56 h11" stroke="#8E8271" stroke-width="4" stroke-linecap="round"/>';
+  /* 매트 격자 — 톤 낮춰 캐릭터를 방해하지 않게 */
+  s+=rep(5,function(r){ return rep(9,function(c){
+      var on=(r+c)%2===0;
+      return '<rect x="'+(c*92-20)+'" y="'+(380+r*40)+'" width="92" height="40" fill="'+(on?'#C98C7E':'#7E9AC9')+'" opacity=".55"/>'; }); });
+  s+='<rect y="374" width="820" height="8" fill="#B7A78E"/>';
+  return sc('#F4F0E8', 380, '#D3A395', s);
+}
+
+var SCENES=[
+  /* 앞 두 곳은 5단계 실사와 겹치는 장소다 — 연습 맥락과 실전 맥락을 일부러 포갠다 */
+  {k:'class',   nm:'교실',        f:scClass},
+  {k:'play',    nm:'놀이터',      f:scPlay},
+  {k:'kids',    nm:'키즈카페',    f:scKids},
+  {k:'cvs',     nm:'편의점',      f:scCvs},
+  {k:'stat',    nm:'무인문방구',  f:scStat},
+  {k:'variety', nm:'생활용품점',  f:scVariety},
+  {k:'dept',    nm:'백화점',      f:scDept},
+  {k:'cinema',  nm:'영화관',      f:scCinema},
+  {k:'futsal',  nm:'풋살장',      f:scFutsal},
+  {k:'dojang',  nm:'태권도장',    f:scDojang}
+];
+function sceneByKey(k){
+  for(var i=0;i<SCENES.length;i++) if(SCENES[i].k===k) return SCENES[i];
+  return SCENES[0];
+}
+
+/* ── 사운드: 짧은 톤 (파일 없음) ──────────────────────────────── */
+var actx=null;
+function tone(freq,ms,type){
+  try{
+    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    var o=actx.createOscillator(), g=actx.createGain();
+    o.type=type||'sine'; o.frequency.value=freq;
+    g.gain.setValueAtTime(.0001,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.16,actx.currentTime+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+ms/1000);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+ms/1000+.02);
+  }catch(e){}
+}
+var sfx={
+  tap:function(){ tone(660,90); },
+  start:function(){ tone(523,110); setTimeout(function(){tone(784,150);},95); },
+  reward:function(){ [523,659,784,1046].forEach(function(f,i){ setTimeout(function(){tone(f,200);}, i*130); }); },
+  party:function(){
+    /* 꿀 흐르는 느낌: 낮게 흘러내리는 톤 → 축하 아르페지오 */
+    [880,784,698,622].forEach(function(f,i){ setTimeout(function(){ tone(f,260,'triangle'); }, i*90); });
+    [523,659,784,1046,1318].forEach(function(f,i){ setTimeout(function(){ tone(f,300); }, 480+i*140); });
+  },
+  open:function(){
+    /* 마음이 열리는 소리 — 3음 상행. 닫힌 것이 열리는 느낌이 나야 한다.
+       실패음이 아니라 개방음이라는 점이 중요하다 (규칙 6) */
+    [392,523,659].forEach(function(f,i){ setTimeout(function(){ tone(f,240,'triangle'); }, i*110); });
+  },
+  pound:function(){
+    /* 떡메치기 — 낮고 짧은 타격 4번, 마지막에 밝은 화음.
+       리듬이 이 연출의 정체성이라 소리에도 같은 박자를 준다 */
+    [0,1,2,3].forEach(function(n){ setTimeout(function(){ tone(196,140,'square'); }, 250+n*900); });
+    setTimeout(function(){ [523,659,784].forEach(function(f,i){
+      setTimeout(function(){ tone(f,320); }, i*90); }); }, 3250);
+  },
+  splash:function(){
+    /* 첨벙 — 낮게 통통 튀는 톤. 폭죽 없이도 '들어갔다'가 들리게 */
+    [392,523,440,587,494].forEach(function(f,i){ setTimeout(function(){ tone(f,220,'triangle'); }, i*180); });
+  }
+};
+
+/* ── 음성 (Web Speech API, ko-KR) ─────────────────────────────── */
+var speakTimer=null;
+function speak(text, done){
+  if(speakTimer){ clearTimeout(speakTimer); speakTimer=null; }
+  var fallback=Math.max(1400, text.length*135);
+  var finished=false;
+  function fin(){ if(finished) return; finished=true; if(done) done(); }
+  speakTimer=setTimeout(fin, fallback+900);
+  if(!('speechSynthesis' in window)){ if(speakTimer) clearTimeout(speakTimer); speakTimer=setTimeout(fin, fallback); return; }
+  try{
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang='ko-KR'; u.rate=.92; u.pitch=1.15;
+    u.onend=fin; u.onerror=fin;
+    window.speechSynthesis.speak(u);
+  }catch(e){ if(speakTimer) clearTimeout(speakTimer); speakTimer=setTimeout(fin, fallback); }
+}
+function shutUp(){
+  if(speakTimer){ clearTimeout(speakTimer); speakTimer=null; }
+  if('speechSynthesis' in window){ try{ window.speechSynthesis.cancel(); }catch(e){} }
+}
+
+/* ── 상태 ────────────────────────────────────────────────────── */
+var S={ screen:'start', turn:0, phase:'ask', charState:'idle', forced:false,
+        filled:2, scene:'kids', songColor:'green', reward:'party', rewardIdx:0,
+        mode:'live',            /* 'demo' = 관람(시범) · 'live' = 아이 차례 */
+        other:'siru',           /* 지금 무대에 선 상대역 */
+        retry:0,                /* 이번 턴의 재시도 횟수. 턴을 소비하지 않는다 */
+        nextWrong:false };      /* 시연용 — 다음 발화를 오답으로 처리 */
+var T={ mic:null, think:null, wait:null, party:null };
+function clearTimers(){
+  for(var k in T){
+    if(!T[k]) continue;
+    if(k==='fxLoop') clearInterval(T[k]); else clearTimeout(T[k]);
+    T[k]=null;
+  }
+}
+
+var $=function(id){ return document.getElementById(id); };
+
+/* ── 렌더 ────────────────────────────────────────────────────── */
+function setScreen(name){
+  S.screen=name;
+  ['s-start','s-talk','s-reward','s-cast','s-scenes'].forEach(function(id){ $(id).classList.remove('on','vis'); });
+  var el=$({start:'s-start',talk:'s-talk',reward:'s-reward',cast:'s-cast',scenes:'s-scenes'}[name]);
+  el.classList.add('on');
+  void el.offsetWidth;          /* 리플로우 — display 전환 직후엔 transition 이 안 걸린다 */
+  el.classList.add('vis');
+}
+/* 무대에 설 수 있는 상대역. 송편은 교체되지 않는 파트너라 여기 없다 */
+var PARTNER='송편';
+var OTHERS={
+  siru:   {nm:'시루떡', f:svgSirutteok},
+  gara:   {nm:'가래떡', f:svgGaraetteok},
+  injeol: {nm:'인절미', f:svgInjeolmi},
+  kkul:   {nm:'꿀떡',   f:svgKkultteok},
+  yak:    {nm:'약과',   f:svgYakgwa},
+  baek:   {nm:'백설기', f:svgBaekseolgi}
+};
+function otherNow(){ return OTHERS[S.other] || OTHERS.siru; }
+/* 화자를 이름 문자열로 비교하지 않는다. 파트너가 아니면 전부 상대역이다 —
+   상대역을 인절미·가래떡으로 바꿔도 입이 계속 움직인다 */
+function actorOf(speaker){
+  return (speaker===PARTNER || speaker==='a-song') ? 'a-song' : 'a-other';
+}
+function setOther(key){
+  if(!OTHERS[key]) return;
+  S.other=key;
+  $('a-other').innerHTML = OTHERS[key].f();
+  $('a-other').classList.remove('opened','bursting','heart-open');
+  $('today-who').innerHTML = OTHERS[key].f();
+  desyncEyes();                       /* 새로 주입된 SVG 도 같은 시각에 깜빡이지 않게 */
+  $('today-place').textContent = sceneByKey(S.scene).nm + '에서 ' + OTHERS[key].nm + '이랑 연습해요';
+}
+function setChar(state, speaker){
+  S.charState=state;
+  var song=$('a-song'), other=$('a-other');
+  if(state==='speaking'){
+    var who=actorOf(speaker);
+    song.setAttribute('data-state',  who==='a-song'  ? 'speaking':'idle');
+    other.setAttribute('data-state', who==='a-other' ? 'speaking':'idle');
+  }else if(state==='canthear'){
+    song.setAttribute('data-state','canthear');
+    other.setAttribute('data-state','idle');
+  }else{
+    song.setAttribute('data-state',state);
+    other.setAttribute('data-state',state==='thinking'?'idle':state);
+  }
+  paintMic();
+}
+function paintMic(){
+  var mic=$('btn-mic'), st=S.charState, demo=(S.mode==='demo');
+  mic.classList.toggle('rec',  !demo && st==='listening');
+  /* canthear 를 포함시킨다 — 다시 말해달라고 부탁해 놓고 마이크를 재우면
+     아이가 무엇을 해야 하는지 알 수 있는 유일한 신호가 사라진다 */
+  mic.classList.toggle('idle', !demo && (st==='idle' || st==='canthear'));
+  mic.setAttribute('data-off', (demo || st==='thinking') ? '1':'0');
+}
+/* 표정을 바꿀 때 눈을 한 번 감았다 뜬다. 감긴 110ms 사이에 부위를 교체하므로
+   아이 눈에는 "다른 그림으로 갈아끼워진" 게 아니라 "표정이 바뀐" 것으로 보인다.
+   ⚠ 큐잉하지 않는다 — 만 4~6세는 원인과 결과를 짧은 시간창 안에서만 잇는다.
+      대사보다 표정이 늦게 오면 인과가 끊긴다. 마지막 것만 적용(디바운스). */
+var T_emo={};
+var NO_MOTION = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+function setEmo(id, emo, soft){
+  var el=$(id); if(!el) return;
+  emo = emo || 'none';
+  soft = !!soft;
+  var t=T_emo[id];
+  /* ⚠ 비교 대상은 **현재 속성이 아니라 예약된 목표**다.
+     현재 속성으로 비교하면 "sad 예약 → 곧바로 none 요청" 같은 순서에서 none 이
+     '이미 none' 으로 착각해 조기 반환하고, 취소됐어야 할 sad 예약이 뒤늦게 실행된다.
+     실제로 시범 마지막 줄(시루떡 sad) 뒤에 송편이 슬픈 얼굴로 굳는 버그가 여기서 났다. */
+  var target = t ? t.to : (el.getAttribute('data-emo')||'none');
+  var targetSoft = t ? t.soft : (el.getAttribute('data-emo-soft')==='1');
+  if(target===emo && targetSoft===soft) return;
+  function apply(){
+    el.setAttribute('data-emo', emo);
+    if(soft) el.setAttribute('data-emo-soft','1'); else el.removeAttribute('data-emo-soft');
+  }
+  if(t){ clearTimeout(t.a); clearTimeout(t.b); }
+  if(NO_MOTION){ T_emo[id]=null; apply(); return; }   /* 모션 없이 즉시 = 예전 동작과 동일 */
+  el.classList.add('emo-blink');
+  T_emo[id]={
+    to:emo, soft:soft,
+    a:setTimeout(function(){ apply(); }, 110),
+    b:setTimeout(function(){ el.classList.remove('emo-blink'); T_emo[id]=null; }, 260)
+  };
+}
+/* 시선 — 누구에게 하는 말인지 눈으로 가리킨다 */
+function setGaze(id, dir){
+  var el=$(id); if(!el) return;
+  if(dir==='in') el.setAttribute('data-gaze','in'); else el.removeAttribute('data-gaze');
+}
+
+/* ── 파트너 송편의 감정 동조 ─────────────────────────────────────
+   상대역이 화를 내는데 송편이 같은 얼굴로 서 있으면 아이 옆에 아무도 없는 것과 같다.
+   단, 한 단계 약하게 — 그리고 매핑에 두 개의 'none' 이 있는 게 이 표의 핵심이다.
+
+   ⚠⚠ 절대 규칙: **송편은 상황에 반응한다. 아이의 발화에는 반응하지 않는다.**
+   그래서 동조는 askTurn(상대역이 감정을 드러내는 순간) 한 곳에서만 일어나고
+   respond(아이 발화 직후)에서는 송편의 감정을 절대 바꾸지 않는다.
+   respond 구간에서 표정이 바뀌면 시간적 근접성 때문에 아이는 예외 없이
+   그것을 "내 대답에 대한 채점"으로 읽는다 — 규칙 6이 금지한 정답 공개의 우회다. */
+var PARTNER_ECHO={
+  angry:     'none',       /* 같이 화내면 아이가 둘 사이에 낀다. 중립이라야 "내 편"이 유지된다 */
+  scared:    'none',       /* 같이 무서워하면 아이의 불안이 증폭된다 */
+  sad:       'sad',
+  shy:       'joy',
+  surprised: 'surprised',
+  joy:       'joy',
+  proud:     'joy',
+  none:      'none'
+};
+function echoPartner(otherEmo){
+  var e = PARTNER_ECHO[otherEmo||'none'] || 'none';
+  /* 감정과 '약하게' 플래그는 반드시 같은 시점에 바뀌어야 한다.
+     따로 쓰면 둘 사이에 부속(눈물·볼)이 그대로 드러나는 프레임이 생긴다 */
+  setEmo('a-song', e, e!=='none');
+}
+
+/* 캐릭터 등·퇴장 — 즉시 나타나거나 사라지지 않는다.
+   만 4~6세는 갑작스러운 등장/소멸을 놓치거나 놀란다 */
+function enterActor(id){
+  var el=$(id);
+  el.classList.remove('leaving','entering');
+  void el.offsetWidth;
+  el.classList.add('entering');
+  setTimeout(function(){ el.classList.remove('entering'); }, 460);
+}
+function exitActor(id, done){
+  var el=$(id);
+  el.classList.remove('entering');
+  el.classList.add('leaving');
+  setTimeout(function(){ el.classList.remove('leaving'); if(done) done(); }, 300);
+}
+function say(obj){
+  /* 이름도 화자 판정과 같은 규칙을 따른다 — 파트너가 아니면 지금 무대에 선 상대역이다 */
+  $('bubble-name').textContent = (obj.who===PARTNER) ? PARTNER : otherNow().nm;
+  $('bubble-line').textContent = obj.t;
+}
+/* 시범(관람) ↔ 실전 전환. 마이크가 주 신호, 화면 톤·기울기가 보조 */
+function setMode(m){
+  S.mode=m;
+  $('s-talk').classList.toggle('demo-mode', m==='demo');
+  paintMic();                      /* 마이크 상태를 즉시 다시 계산한다 */
+}
+/* 깜빡임 비동기화 — 전에는 모든 SVG가 같은 틱에 주입돼 **일제히** 깜빡였다.
+   갤러리 8종이 한 몸처럼 깜빡이면 인형 진열대로 보인다. 주기 3종 + 시작 시점을 흩는다 */
+var BLINK=[4.4,5.2,6.1];
+function desyncEyes(){
+  var g=document.querySelectorAll('.eyes');
+  for(var i=0;i<g.length;i++){
+    g[i].style.animationDuration = BLINK[i%BLINK.length]+'s';
+    g[i].style.animationDelay = ((i*0.77)%4).toFixed(2)+'s';
+  }
+}
+/* 대기 변주 — 8초·16초에 한 번씩. **강도를 올리지 않는다.**
+   재촉과 초대를 가르는 기준은 하나다 — "이 신호가 5초 뒤에 더 강해지는가?" */
+function nudgeSoon(n){
+  T.nudge=setTimeout(function(){
+    if(S.phase!=='waitForChild') return;
+    var el=$('a-song');
+    el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge');
+    T.nudgeOff=setTimeout(function(){ el.classList.remove('nudge'); }, 700);
+    if(n<2) nudgeSoon(n+1);
+  }, 8000);
+}
+function paintTurns(){
+  var dots=$('turnbar').children;
+  for(var i=0;i<dots.length;i++){
+    dots[i].className = i<S.turn ? 'done' : (i===S.turn ? 'now' : '');
+  }
+}
+
+/* ── 흐름 ────────────────────────────────────────────────────── */
+function startSession(){
+  clearTimers(); shutUp();
+  S.turn=0; S.retry=0; S.forced=false; S.nextWrong=false;
+  S.phase='intro';        /* 이전 세션의 phase 가 남으면 대기 유도가 잘못 걸린다 */
+  $('a-other').classList.remove('opened','bursting','heart-open','freeze');
+  setGaze('a-song',null); setGaze('a-other',null);
+  setEmo('a-song','none'); setEmo('a-other','none');
+  setMode('live');
+  setScreen('talk'); paintTurns();
+  sfx.start();
+  enterActor('a-song');
+  T.enter=setTimeout(function(){ enterActor('a-other'); }, 180);   /* 상대역이 뒤따라 등장 */
+  presentIntro();
+}
+function presentIntro(){
+  setChar('speaking','송편'); say(LINES.intro);
+  speak(LINES.intro.t, function(){
+    if(S.forced) return;
+    setChar('speaking','송편'); say(LINES.demoIn);
+    speak(LINES.demoIn.t, function(){          /* 예고는 아이를 보고 한다 → 아직 live */
+      if(S.forced) return;
+      runDemo(function(){ askTurn(); });
+    });
+  });
+}
+/* ── 시범 단계 (덱 2단계) ────────────────────────────────────────
+   아이는 듣기만 한다. 마이크가 잠들어 있는 것이 "내 차례가 아니다"의 주 신호다.
+   시범은 턴이 아니므로 turnbar 를 감추고 S.turn 을 건드리지 않는다.        */
+function runDemo(done){
+  setMode('demo');
+  S.phase='demo';
+  setGaze('a-song','in'); setGaze('a-other','in');   /* 둘이 서로를 본다 = 둘 사이의 일 */
+  var i=0;
+  (function next(){
+    if(S.forced) return;
+    if(i>=LINES.demo.length){
+      setEmo('a-other','none'); echoPartner('none');
+      setGaze('a-song',null); setGaze('a-other',null); /* 둘 다 아이를 본다 = 네 차례 */
+      setMode('live');                                 /* 마이크가 깨어난다 */
+      setChar('idle');
+      if(done) done();
+      return;
+    }
+    var l=LINES.demo[i++];
+    if(l.who!==PARTNER){ setEmo('a-other', l.emo); echoPartner(l.emo); }
+    setChar('speaking', l.who); say(l);
+    speak(l.t, next);
+  })();
+}
+function askTurn(){
+  if(S.forced) return;
+  var t=LINES.turns[S.turn];
+  S.phase='ask'; S.retry=0; paintTurns();     /* 재시도 카운터는 턴마다 리셋된다 */
+  setEmo('a-other', t.emo);
+  echoPartner(t.emo);                 /* 상황에 대한 반응. 아이 발화에 대한 반응이 아니다 */
+  setChar('speaking', otherNow().nm); say(t.ask);
+  speak(t.ask.t, function(){
+    if(S.forced) return;
+    setChar('speaking','송편'); say(t.hint);
+    speak(t.hint.t, function(){
+      if(S.forced) return;
+      setChar('idle'); S.phase='waitForChild'; nudgeSoon(1);
+    });
+  });
+}
+function replay(){
+  sfx.tap(); if(S.forced) return;
+  clearTimers(); shutUp();
+  /* 시범 중이면 시범을 다시 보여준다. 지시는 언제나 다시 들을 수 있어야 한다 */
+  if(S.mode==='demo'){ runDemo(function(){ askTurn(); }); return; }
+  askTurn();
+}
+function micTap(){
+  sfx.tap(); if(S.forced) return;
+  if(S.charState==='listening'){ stopListening(true); return; }
+  shutUp(); clearTimers();
+  setChar('listening'); S.phase='listening';
+  /* 15초 지나면 자동 종료 → 인식 실패로 처리 */
+  T.mic=setTimeout(function(){ stopListening(false); }, 15000);
+}
+function stopListening(heard){
+  clearTimers();
+  if(!heard){ cantHear(); return; }
+  setChar('thinking'); S.phase='thinking';
+  /* 3초 넘으면 기다려달라고 말한다 */
+  T.wait=setTimeout(function(){
+    setChar('thinking'); say(LINES.wait); speak(LINES.wait.t);
+  }, 3000);
+  T.think=setTimeout(function(){
+    if(T.wait){ clearTimeout(T.wait); T.wait=null; }
+    /* 지금은 STT·LLM 이 없어 시연 바의 「틀린 답」으로 오답 경로를 태운다.
+       실제 연동 시 이 자리에 판정 결과가 들어온다 */
+    if(S.nextWrong){ S.nextWrong=false; respondWrong(); return; }
+    respond();
+  }, 2300);
+}
+function cantHear(){
+  setChar('canthear'); say(LINES.cant); S.phase='waitForChild';
+  speak(LINES.cant.t); nudgeSoon(1);
+}
+/* 마음 열림 — 앱의 가장 강한 학습 지점. 정지 → 부풀기 → (시루떡이면) 층 벌어짐.
+   상대역이 누구든 ①②는 재생된다. 층 벌어짐만 시루떡 고유 연출이다 */
+function openHeart(){
+  var el=$('a-other');
+  el.classList.remove('bursting','heart-open');
+  void el.offsetWidth;
+  el.classList.add('freeze');                       /* ① 0.2초 정지 — 시선을 모은다 */
+  T.open=setTimeout(function(){
+    el.classList.remove('freeze');
+    el.classList.add('heart-open','opened','bursting');   /* ② 부풀기 ③ 층·팥고물 */
+    sfx.open();
+    /* ④ 송편의 반응 — ⚠ 여기는 아이 발화 직후다. 송편이 기뻐하면 아이는 그것을
+       "내 대답이 정답"으로 읽는다(규칙 6의 우회). 그래서 두 가지를 지킨다.
+         · 감정은 joy 가 아니라 surprised — 채점이 아니라 목격이다
+         · 시선을 아이가 아닌 **상대역 쪽으로 돌린다** — 반응의 대상을 눈이 가리킨다
+       시선 채널이 없었다면 이 항목은 넣을 수 없었다 */
+    setGaze('a-song','in');
+    setEmo('a-song','surprised', true);
+    T.openEnd=setTimeout(function(){
+      el.classList.remove('heart-open','bursting');
+      setGaze('a-song',null); setEmo('a-song','none');
+    }, 1500);
+  }, 200);
+}
+/* ── 오답 경로 — 예선 기획서의 "긍정적인 재시도 루프" ──────────────
+   두 규칙을 동시에 지켜야 한다.
+     규칙 6(페널티 없음) → 재시도가 손실이 되면 안 된다 ⇒ **턴을 소비하지 않는다**
+     규칙 7(세션은 끝난다) → 무한 루프가 되면 안 된다   ⇒ **상한 2회**
+   목업에 이미 선례가 있었다 — cantHear 는 S.turn 을 올리지 않는다. 그것을 따른다.
+
+   상한에 닿으면 벌이 아니라 **지원 수준을 한 단계 올려** 턴을 완결시킨다.
+     1차 실패 → 더 구체적인 힌트
+     2차 실패 → 송편이 함께 말해준다
+     3차     → 지원과 함께 턴이 넘어간다 (아이를 붙잡아 두지 않는다)
+
+   3단계를 "선택지 제시"가 아니라 "함께 말하기"로 정한 이유:
+   글자를 못 읽는 아이에게 선택지를 보이려면 두 발화를 **소리로만** 제시해야 하는데,
+   그러면 아이가 두 개를 동시에 기억해야 한다. 이 나이대에는 한 문장을 따라 하는 쪽이
+   확실히 쉽다. 대신 따라 하기로 끝나지 않도록 **마지막 단계에서만, 핵심 어구만** 준다.
+
+   ⚠ 상대역의 감정은 그대로 둔다. 아이 발화 뒤에 상황을 악화시키지 않는다(가이드 §5). */
+var RETRY_MAX=2;
+function respondWrong(){
+  if(S.forced) return;
+  var t=LINES.turns[S.turn];
+  S.retry++;
+  if(S.retry>RETRY_MAX){ respond(); return; }     /* 상한 도달 — 지원과 함께 턴 완결 */
+  var line = (S.retry===1) ? t.sup1 : t.sup2;
+  setEmo('a-other', t.emo); echoPartner(t.emo);   /* 나빠지지 않는다. 그대로다 */
+  setChar('speaking', PARTNER); say(line);
+  speak(line.t, function(){
+    if(S.forced) return;
+    setChar('idle'); S.phase='waitForChild'; nudgeSoon(1);
+  });
+}
+function respond(){
+  var t=LINES.turns[S.turn];
+  if(S.turn===LINES.turns.length-1) openHeart();     /* 마지막 턴 = 마음이 열린다 */
+  setEmo('a-other', t.backEmo);
+  setChar('speaking', otherNow().nm); say(t.back);
+  speak(t.back.t, function(){
+    if(S.forced) return;
+    S.turn++; paintTurns();
+    if(S.turn>=LINES.turns.length){
+      /* 둘 다 퇴장한 뒤에 보상으로 넘어간다. 예전엔 상대역만 나가고 송편은 화면과
+         함께 사라져서, 아이 입장에선 파트너가 증발한 셈이었다 */
+      exitActor('a-other');
+      T.exit=setTimeout(function(){ exitActor('a-song', reward); }, 120);
+    }
+    else askTurn();
+  });
+}
+function reward(){
+  clearTimers(); shutUp(); endParty();
+  setScreen('reward');
+  setEmo('reward-song','proud');
+  say(LINES.cheer);
+  sfx.reward();
+  speak(LINES.cheer.t);
+  var layers=$('rainbow').querySelectorAll('.rl');
+  for(var i=0;i<layers.length;i++) layers[i].classList.toggle('fill', i<S.filled);
+  setTimeout(function(){
+    if(S.filled<6){
+      var el=layers[S.filled];
+      el.classList.add('fill','pop');
+      S.filled++;
+    }
+    /* 6층을 다 모았으면 보상 — 매번 다음 연출로 돌아간다 */
+    if(S.filled>=6) T.party=setTimeout(function(){
+      runReward(REWARDS[S.rewardIdx % REWARDS.length].k);
+      S.rewardIdx++;
+    }, 700);
+  }, 600);
+}
+
+/* ── 꿀파티 — 무지개떡 완성 보상 ─────────────────────────────
+   떡을 다 모았으니 꿀을 붓는다. 꿀단지가 팝 하고 나타나 꿀을 붓고,
+   바닥은 꿀수영장이 되어 캐릭터들이 물놀이를 하고, 꿀폭죽이 터진다. */
+
+/* 꿀단지 */
+function svgHoneyPot(){
+  return '<svg viewBox="0 0 220 200">'
+   + '<path d="M118,52 L172,20" stroke="#C89A4E" stroke-width="9" stroke-linecap="round" fill="none"/>'
+   + '<ellipse cx="178" cy="18" rx="17" ry="12" fill="#E7B45C"/>'
+   + '<path d="M44,74 h132 l-13,92 a16,16 0 0 1 -16,14 h-74 a16,16 0 0 1 -16,-14 Z" fill="#E7B45C"/>'
+   + '<path d="M62,104 q48,20 96,0 l-9,62 a14,14 0 0 1 -14,12 h-50 a14,14 0 0 1 -14,-12 Z" fill="#F4D492" opacity=".62"/>'
+   + '<rect x="34" y="54" width="152" height="28" rx="13" fill="#F0C878"/>'
+   + '<ellipse cx="110" cy="60" rx="62" ry="10" fill="#D99F2E"/>'
+   /* 입구에서 흘러넘치는 꿀 */
+   + '<path d="M52,72 q10,26 22,10 q10,30 22,8 q12,32 24,6 q12,28 24,4 q10,22 20,6 l-4,-30 h-112 z" fill="#EDAE3C"/>'
+   + '</svg>';
+}
+/* 물결 — 좌우로 흘려도 이음매가 안 보이게 2배 폭으로 그린다 */
+function wavePath(w,h,amp,humps,y){
+  var seg=w/humps, d='M0,'+y;
+  for(var i=0;i<humps;i++){
+    d+=' q'+(seg/4)+',-'+amp+' '+(seg/2)+',0 q'+(seg/4)+','+amp+' '+(seg/2)+',0';
+  }
+  return d+' L'+w+','+h+' L0,'+h+' Z';
+}
+var SWIMMERS=[
+  { f:svgKkultteok,   x:6,  tube:'a', d:0    },
+  { f:svgSongpyeon,   x:30, tube:'',  d:.45  },
+  { f:svgInjeolmi,    x:56, tube:'b', d:.9   },
+  { f:svgSirutteok,   x:79, tube:'',  d:1.35 }
+];
+function buildPool(){
+  $('pool-front').innerHTML =
+    '<svg viewBox="0 0 1640 190" preserveAspectRatio="none">'
+    + '<path d="'+wavePath(1640,190,26,16,44)+'" fill="#EDAE3C"/>'
+    + '<path d="'+wavePath(1640,190,18,16,66)+'" fill="#D8901A" opacity=".5"/>'
+    + '</svg>';
+  $('swimmers').innerHTML = SWIMMERS.map(function(s){
+    return '<div class="swim" style="left:'+s.x+'%;animation-delay:'+s.d+'s" data-state="idle" data-emo="joy">'
+      + (s.tube ? '<span class="tube '+s.tube+'"></span>' : '')
+      + s.f() + '</div>';
+  }).join('')
+  + SWIMMERS.map(function(s,i){
+    return '<span class="splash" style="left:'+(s.x+3)+'%;animation-delay:'+(s.d+.3)+'s"></span>';
+  }).join('');
+}
+/* 꿀폭죽 */
+function burst(xPct, yPct){
+  /* 배경이 밝으므로 흰색은 묻힌다. 꿀비보다 진하고 채도 높은 호박·주황으로 간다 */
+  var fx=$('fx'), C=['#F5A623','#FF8A47','#FFC12E','#E07C1E','#FFB01F','#FF9A3D'];
+  /* 터지는 순간: 흰 섬광 + 퍼지는 링 */
+  ['flash','boom'].forEach(function(cls){
+    var e=document.createElement('div');
+    e.className=cls; e.style.left=xPct+'%'; e.style.top=yPct+'%';
+    fx.appendChild(e);
+  });
+  for(var i=0;i<20;i++){
+    var a=(Math.PI*2*i)/20 + Math.random()*.32,
+        r=95+Math.random()*145,
+        sz=13+Math.random()*14,
+        p=document.createElement('div');
+    p.className='spark2';
+    p.style.left=xPct+'%'; p.style.top=yPct+'%';
+    p.style.width=sz+'px'; p.style.height=sz+'px';
+    p.style.background=C[i%C.length];
+    p.style.setProperty('--dx',(Math.cos(a)*r).toFixed(1)+'px');
+    p.style.setProperty('--dy',(Math.sin(a)*r).toFixed(1)+'px');
+    p.style.animationDelay=(Math.random()*.09)+'s';
+    fx.appendChild(p);
+  }
+  tone(620+Math.random()*420, 130, 'triangle');
+  T.fxClean=setTimeout(function(){ if($('fx')) $('fx').innerHTML=''; }, 1500);
+}
+
+/* ── 완성 보상은 여러 종류다. 한 번에 다 보여주지 않고 하나씩 돌아가며 나온다.
+      매번 같은 연출이면 세 번째부터 아무 의미가 없다. ─────────────────── */
+var REWARDS=[
+  { k:'party', nm:'🍯 꿀파티',   cheer:'🍯 꿀파티!',   run:fxParty,
+    line:{ who:'송편', t:'무지개떡을 다 모았어! 꿀파티다!' } },
+  { k:'pool',  nm:'🏊 꿀수영장', cheer:'🏊 꿀수영장!', run:fxPool,
+    line:{ who:'송편', t:'무지개떡을 다 모았어! 꿀수영장에서 놀자!' } },
+  { k:'pound', nm:'🫓 떡메치기', cheer:'🫓 떡메치기!', run:fxPound, noCoat:true,
+    line:{ who:'송편', t:'무지개떡을 다 모았어! 인절미랑 떡메로 쳐서 더 쫄깃하게 만들자!' } }
+];
+function rewardByKey(k){
+  for(var i=0;i<REWARDS.length;i++) if(REWARDS[i].k===k) return REWARDS[i];
+  return REWARDS[0];
+}
+
+/* 꿀비 — 꿀파티 전용 */
+function honeyRain(n){
+  var box=$('drops'); box.innerHTML='';
+  for(var i=0;i<n;i++){
+    var d=document.createElement('div'), w=10+Math.random()*13;
+    d.className='drop';
+    d.style.left=(Math.random()*100)+'%';
+    d.style.width=w+'px';
+    d.style.height=(w*1.4)+'px';
+    d.style.opacity=(.5+Math.random()*.5);
+    d.style.animationDuration=(1.7+Math.random()*1.7)+'s';
+    d.style.animationDelay=(Math.random()*2.4)+'s';
+    box.appendChild(d);
+  }
+}
+
+/* 보상 A — 꿀파티: 꿀단지가 붓고, 꿀비가 내리고, 꿀폭죽이 터진다 */
+function fxParty(){
+  $('pot').innerHTML = svgHoneyPot();
+  honeyRain(26);                  /* 폭죽이 묻히지 않게 조금 성기게 */
+  sfx.party();
+  [1200, 1900, 2700, 3600].forEach(function(ms,i){
+    T['fx'+i]=setTimeout(function(){ burst(18+Math.random()*64, 16+Math.random()*30); }, ms);
+  });
+  T.fxLoop=setInterval(function(){ burst(14+Math.random()*72, 14+Math.random()*32); }, 2600);
+}
+
+/* 보상 B — 꿀수영장: 바닥이 꿀 웅덩이가 되고 캐릭터들이 물놀이를 한다.
+   폭죽·꿀비는 넣지 않는다. 잔잔한 쪽이 이 연출의 성격이다. */
+function fxPool(){
+  buildPool();
+  sfx.splash();
+}
+
+/* 콩고물 — 짧게 톡 튄다. 폭죽과 섞이면 안 되므로 알 수·거리·섬광을 전부 다르게 뒀다 */
+function beanBurst(xPct, yPct){
+  var fx=$('fx');
+  for(var i=0;i<7;i++){
+    var a=-Math.PI*0.9 + (Math.PI*0.8*i)/6 + (Math.random()-.5)*.3,
+        r=54+Math.random()*46,
+        b=document.createElement('div');
+    b.className='bean';
+    b.style.left=xPct+'%'; b.style.top=yPct+'%';
+    b.style.setProperty('--dx',(Math.cos(a)*r).toFixed(1)+'px');
+    b.style.setProperty('--dy',(Math.sin(a)*r).toFixed(1)+'px');
+    b.style.animationDelay=(Math.random()*.05)+'s';
+    fx.appendChild(b);
+  }
+}
+
+/* 보상 C — 떡메치기: 인절미가 0.9초 간격으로 네 번 친다.
+   앞의 두 연출에 없던 **리듬 · 중앙 무대 · 행위자로서의 캐릭터**가 여기서 생긴다. */
+function fxPound(){
+  $('pounder').innerHTML = svgInjeolmi();
+  desyncEyes();
+  sfx.pound();
+  for(var i=0;i<4;i++){
+    (function(n){
+      T['fx'+n]=setTimeout(function(){
+        if(NO_MOTION){
+          /* 모션이 없으면 타격도 입자도 보이지 않는다. 대신 **광택이 4단계로 계단식**
+             으로 올라가 리듬을 시각적으로 남기고, 소리는 그대로 4박을 친다 */
+          $('rainbow').classList.add('glossy');
+          $('rainbow').style.setProperty('--gloss', ((n+1)/4).toFixed(2));
+          return;
+        }
+        beanBurst(60+Math.random()*8, 43+Math.random()*5);   /* 떡메가 닿는 떡 어깨 부근 */
+        if(n===3){
+          T.fxGloss=setTimeout(function(){ $('rainbow').classList.add('glossy'); }, 420);
+        }
+      }, 250 + n*900);                 /* 첫 타격은 떡메가 내려온 시점(0.25s)에 맞춘다 */
+    })(i);
+  }
+}
+
+function runReward(k){
+  var r=rewardByKey(k);
+  S.reward=r.k;
+  $('s-reward').classList.add('party-on','fx-'+r.k);
+  /* 꿀 코팅은 '완성' 표식이지만 떡메치기에는 얹지 않는다 — 꿀을 섞는 순간
+     세 연출의 성격 구분이 무너진다. 떡메치기의 완성 표식은 광택이다 */
+  if(!r.noCoat) $('rainbow').classList.add('coated');
+  $('cheer').textContent=r.cheer;
+  $('bye').textContent='무지개떡을 다 모았어!';
+  say(r.line);
+  r.run();
+  speak(r.line.t);
+}
+function endParty(){
+  $('s-reward').classList.remove('party-on');
+  REWARDS.forEach(function(r){ $('s-reward').classList.remove('fx-'+r.k); });
+  $('rainbow').classList.remove('coated','glossy');
+  $('rainbow').style.removeProperty('--gloss');
+  $('drops').innerHTML=''; $('fx').innerHTML='';
+  $('pot').innerHTML=''; $('swimmers').innerHTML=''; $('pool-front').innerHTML='';
+  $('pounder').innerHTML='';
+  if(T.fxLoop){ clearInterval(T.fxLoop); T.fxLoop=null; }
+  ['fx0','fx1','fx2','fx3','fxClean','fxGloss'].forEach(function(k){
+    if(T[k]){ clearTimeout(T[k]); T[k]=null; }
+  });
+  $('cheer').textContent='잘 말했어!';
+  $('bye').textContent='오늘 연습은 여기까지야';
+}
+/* 시연용: 특정 보상 연출을 바로 띄운다 */
+function showReward(k){
+  S.filled=6; S.forced=true;
+  clearTimers(); shutUp(); endParty();
+  setScreen('reward');
+  setEmo('reward-song','proud');
+  var layers=$('rainbow').querySelectorAll('.rl');
+  for(var i=0;i<layers.length;i++) layers[i].classList.add('fill');
+  sfx.reward();
+  T.party=setTimeout(function(){ runReward(k); }, 500);
+}
+function goHome(){
+  sfx.tap(); clearTimers(); shutUp(); endParty();
+  if(S.filled>=6) S.filled=0;      /* 한 판을 다 모았으면 새 무지개떡을 시작한다 */
+  S.forced=false; setScreen('start');
+}
+
+/* ── 캐릭터 확인용 화면 (아이 화면 아님) ─────────────────────── */
+var CAST=[
+  {k:'파트너', p:1, nm:'송편',    ro:'진행 · 공감 · 칭찬<br>항상 곁에 있음', f:svgSongpyeon},
+  {k:'상대역', nm:'시루떡',       ro:'갈등 상황<br>싫다고 말하기', f:svgSirutteok, id:'g-siru', act:'open'},
+  {k:'상대역', nm:'가래떡',       ro:'인사',                      f:svgGaraetteok, act:'talk'},
+  {k:'상대역', nm:'인절미',       ro:'차례 지키기 · 경청',        f:svgInjeolmi},
+  {k:'상대역', nm:'꿀떡',         ro:'부탁 · 도움 요청',          f:svgKkultteok, act:'squeeze'},
+  {k:'상대역', nm:'약과',         ro:'사과 · 화해',               f:svgYakgwa, act:'mend'},
+  {k:'상대역', nm:'백설기',       ro:'진정 · 기다리기',           f:svgBaekseolgi},
+  {k:'오브젝트', nm:'무지개떡',   ro:'보상 · 진행도<br>(표정 없음)', f:svgRainbow}
+];
+/* 카드를 누르면 그 캐릭터의 특기 동작이 재생된다 */
+function playAct(fig, act){
+  if(act==='open'){
+    /* 갤러리에서도 실제 연출 그대로 — 정지 → 부풂 → 층·팥고물 */
+    if(fig.classList.contains('opened')){ fig.classList.remove('opened','bursting','heart-open','freeze'); return; }
+    fig.classList.remove('bursting','heart-open');
+    void fig.offsetWidth;
+    fig.classList.add('freeze');
+    setTimeout(function(){
+      fig.classList.remove('freeze');
+      fig.classList.add('heart-open','opened','bursting');
+      sfx.open();
+      setTimeout(function(){ fig.classList.remove('heart-open','bursting'); }, 700);
+    }, 200);
+    return;
+  }
+  if(act==='talk'){
+    fig.setAttribute('data-state','speaking');
+    setTimeout(function(){ fig.setAttribute('data-state','idle'); }, 2200);
+    return;
+  }
+  if(act==='squeeze'){
+    fig.classList.remove('squeeze');
+    void fig.offsetWidth;                       /* 리플로우 강제 — 연타해도 다시 재생 */
+    fig.classList.add('squeeze');
+    setTimeout(function(){ fig.classList.remove('squeeze'); }, 1200);
+    return;
+  }
+  if(act==='mend'){
+    fig.classList.remove('mending');
+    void fig.offsetWidth;
+    fig.classList.add('mending');
+    setTimeout(function(){ fig.classList.remove('mending'); }, 2700);
+  }
+}
+var CAST_STATES=['idle','listening','thinking','speaking','canthear'];
+var EMOS=[['none','무표정'],['joy','기쁨'],['sad','슬픔'],['angry','화남'],
+          ['scared','무서움'],['surprised','놀람'],['shy','부끄러움'],['proud','뿌듯함']];
+function buildCast(){
+  $('cast-grid').innerHTML = CAST.map(function(c){
+    return '<div class="cast-cell'+(c.act?' tapable':'')+'"'+(c.id?' id="'+c.id+'"':'')
+      + (c.act?' data-act="'+c.act+'"':'')+'>'
+      + '<span class="tier'+(c.p?' p':'')+'">'+c.k+'</span>'
+      + '<div class="cast-fig" data-state="idle" data-emo="none">'+c.f()+'</div>'
+      + '<span class="nm">'+c.nm+'</span>'
+      + '<span class="ro">'+c.ro+'</span>'
+      + (c.act?'<span class="act-hint">눌러보기</span>':'')
+      + '</div>';
+  }).join('');
+  var cells=$('cast-grid').querySelectorAll('.cast-cell');
+  for(var n=0;n<cells.length;n++){
+    (function(cell){
+      var act=cell.getAttribute('data-act');
+      if(!act) return;
+      cell.addEventListener('click', function(){
+        sfx.tap();
+        playAct(cell.querySelector ? cell.querySelector('.cast-fig') : null, act);
+      });
+    })(cells[n]);
+  }
+  $('cast-states').innerHTML = CAST_STATES.map(function(s){
+    return '<button data-cs="'+s+'">'+(s==='canthear'?'cantHear':s)+'</button>';
+  }).join('');
+  $('cast-emos').innerHTML = EMOS.map(function(e){
+    return '<button data-ce="'+e[0]+'">'+e[1]+'</button>';
+  }).join('');
+  bindCast('cast-states','data-cs', castState);
+  bindCast('cast-emos','data-ce', castEmo);
+  castState('idle'); castEmo('none');
+}
+function bindCast(box, attr, fn){
+  var bs=$(box).querySelectorAll('button');
+  for(var i=0;i<bs.length;i++){
+    (function(b){ b.addEventListener('click', function(){ fn(b.getAttribute(attr)); }); })(bs[i]);
+  }
+}
+function paintSel(box, attr, val){
+  var bs=$(box).querySelectorAll('button');
+  for(var j=0;j<bs.length;j++) bs[j].classList.toggle('sel', bs[j].getAttribute(attr)===val);
+}
+function castState(state){
+  var figs=$('cast-grid').querySelectorAll('.cast-fig');
+  for(var i=0;i<figs.length;i++) figs[i].setAttribute('data-state', state);
+  paintSel('cast-states','data-cs',state);
+}
+function castEmo(emo){
+  var figs=$('cast-grid').querySelectorAll('.cast-fig');
+  for(var i=0;i<figs.length;i++) figs[i].setAttribute('data-emo', emo);
+  paintSel('cast-emos','data-ce',emo);
+}
+function openCast(){
+  clearTimers(); shutUp();
+  S.forced=true; setScreen('cast');
+}
+
+/* ── 송편 색 고르기 (아이가 직접) ─────────────────────────────── */
+function setSongColor(k){
+  var c=songColorByKey(k);
+  S.songColor=k;
+  document.documentElement.style.setProperty('--song-body', c.body);
+  document.documentElement.style.setProperty('--song-body-d', c.dark);
+  var bs=$('colors').querySelectorAll('.swatch');
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle('sel', bs[i].getAttribute('data-ck')===k);
+}
+function buildColors(){
+  $('colors').innerHTML = SONG_COLORS.map(function(c){
+    return '<button class="swatch" data-ck="'+c.k+'" aria-label="송편 색 '+c.nm+'" data-state="idle" data-emo="joy">'
+      + svgSongpyeon(c.body, c.dark) + '</button>';
+  }).join('');
+  var bs=$('colors').querySelectorAll('.swatch');
+  for(var i=0;i<bs.length;i++){
+    (function(b){ b.addEventListener('click', function(){
+      sfx.tap(); setSongColor(b.getAttribute('data-ck'));
+    }); })(bs[i]);
+  }
+}
+
+/* ── 장소 ────────────────────────────────────────────────────── */
+function setScene(k){
+  S.scene=k;
+  $('scene').innerHTML = sceneByKey(k).f();
+  $('today-place').textContent = sceneByKey(k).nm + '에서 ' + otherNow().nm + '이랑 연습해요';
+}
+function buildScenes(){
+  $('scene-grid').innerHTML = SCENES.map(function(s){
+    return '<button class="scene-card" data-sk="'+s.k+'">'+s.f()
+      + '<span class="cap2">'+s.nm+'</span></button>';
+  }).join('');
+  var cs=$('scene-grid').querySelectorAll('.scene-card');
+  for(var i=0;i<cs.length;i++){
+    (function(b){ b.addEventListener('click', function(){
+      sfx.tap(); setScene(b.getAttribute('data-sk')); startSession();
+    }); })(cs[i]);
+  }
+}
+function openScenes(){
+  clearTimers(); shutUp();
+  S.forced=true; setScreen('scenes');
+  var cs=$('scene-grid').querySelectorAll('.scene-card');
+  for(var i=0;i<cs.length;i++) cs[i].classList.toggle('sel', cs[i].getAttribute('data-sk')===S.scene);
+}
+
+/* ── 시연용 강제 상태 ────────────────────────────────────────── */
+function force(state){
+  if(S.screen==='cast' && state!=='demo'){ castState(state); return; }   /* 갤러리에서는 전원에게 적용 */
+  clearTimers(); shutUp();
+  S.forced=true;
+  if(S.screen!=='talk'){ setScreen('talk'); paintTurns(); }
+  if(state!=='demo') setMode('live');
+  if(state==='demo'){ S.forced=false; runDemo(function(){ askTurn(); }); return; }
+  if(state==='speaking'){ setChar('speaking', otherNow().nm); say(LINES.turns[0].ask); speak(LINES.turns[0].ask.t); }
+  else if(state==='canthear'){ setChar('canthear'); say(LINES.cant); speak(LINES.cant.t); }
+  else if(state==='thinking'){
+    setChar('thinking'); say({who:'송편',t:'…'});
+    T.wait=setTimeout(function(){ say(LINES.wait); speak(LINES.wait.t); },3000);
+  }
+  else if(state==='listening'){ setChar('listening'); say({who:'송편',t:'듣고 있어'}); }
+  else { setChar('idle'); say({who:'송편',t:'준비됐어'}); }
+}
+function toast(msg){
+  var el=$('toast'); el.textContent=msg; el.classList.add('on');
+  setTimeout(function(){ el.classList.remove('on'); }, 2400);
+}
+
+/* ── 초기화 ──────────────────────────────────────────────────── */
+function boot(){
+  $('hero-song').innerHTML   = svgSongpyeon().replace('<svg ','<svg style="width:250px;height:250px" ');
+  $('today-who').innerHTML   = svgSirutteok();
+  $('reward-song').innerHTML = svgSongpyeon().replace('<svg ','<svg style="width:190px;height:190px" ');
+  $('a-song').innerHTML      = svgSongpyeon();
+  $('a-other').innerHTML     = svgSirutteok();
+  $('rainbow').innerHTML     = svgRainbow();
+  buildCast();
+  buildScenes();
+  setScene(S.scene);
+  buildColors();
+  setSongColor(S.songColor);
+
+  /* 다음 연습 예고 — 상대역 캐릭터 형태로만. 송편은 항상 곁에 있는 파트너라 제외 */
+  var locked=[['인사',svgGaraetteok],['부탁',svgKkultteok],['사과',svgYakgwa],['차례',svgInjeolmi],['진정',svgBaekseolgi]];
+  $('locked-row').innerHTML = locked.map(function(x){
+    return '<div class="locked" data-state="idle">'+x[1]()+'<span class="lk txt">'+x[0]+'</span></div>';
+  }).join('');
+
+  /* 시작 → 대화도 캐릭터가 데리고 간다. 규칙 5(100ms 내 반응)가 우선하므로
+     탭음이 먼저 나가고 그다음 전환이 시작된다 — 이 순서를 뒤집지 않는다 */
+  $('btn-start').addEventListener('click', function(){
+    sfx.tap();
+    exitActor('hero-song', startSession);
+  });
+  $('btn-mic').addEventListener('click', micTap);
+  $('btn-replay').addEventListener('click', replay);
+  $('btn-end').addEventListener('click', goHome);
+  $('btn-parent').addEventListener('click', function(){
+    toast('보호자 화면은 덧셈 게이트 뒤에 있어요 (다음 단계에서 구현)');
+  });
+
+  var fbtns=document.querySelectorAll('#demo button[data-force]');
+  for(var i=0;i<fbtns.length;i++){
+    (function(b){ b.addEventListener('click', function(){ force(b.getAttribute('data-force')); }); })(fbtns[i]);
+  }
+  $('d-text').addEventListener('click', function(){
+    document.body.classList.toggle('no-text');
+    this.textContent = document.body.classList.contains('no-text') ? '글자 켜기' : '글자 끄기';
+  });
+  $('d-open').addEventListener('click', function(){
+    if($('a-other').classList.contains('opened')){
+      $('a-other').classList.remove('opened','bursting','heart-open','freeze');
+    }else{
+      openHeart();
+    }
+  });
+  /* 상대역을 돌려가며 세운다 — 화자 판정이 이름에 묶여 있지 않은지 확인용 */
+  $('d-other').addEventListener('click', function(){
+    var ks=Object.keys(OTHERS);
+    setOther(ks[(ks.indexOf(S.other)+1) % ks.length]);
+    toast('상대역: ' + otherNow().nm);
+  });
+  $('d-cast').addEventListener('click', openCast);
+  $('d-scene').addEventListener('click', openScenes);
+  /* 정상 흐름으로는 4세션 걸리므로 시연용 지름길 */
+  $('d-party').addEventListener('click', function(){ showReward('party'); });
+  $('d-pool').addEventListener('click',  function(){ showReward('pool'); });
+  $('d-pound').addEventListener('click', function(){ showReward('pound'); });
+  $('d-wrong').addEventListener('click', function(){
+    S.nextWrong=true;
+    toast('다음 발화를 오답으로 처리합니다 (턴은 소비되지 않아요)');
+  });
+  $('d-reset').addEventListener('click', function(){ S.filled=2; goHome(); });
+
+  desyncEyes();
+  setScreen('start');
+  fit();
+  window.addEventListener('resize', fit);
+
+  /* 시연 편의: #talk / #listening / #thinking / #canthear / #reward 로 바로 진입 */
+  var h=(location.hash||'').slice(1);
+  if(h.indexOf('cast')===0){                       /* #cast · #cast-speaking … */
+    openCast();
+    var cs=h.split('-')[1];
+    if(CAST_STATES.indexOf(cs)>=0) castState(cs);
+    else if(EMOS.some(function(e){ return e[0]===cs; })) castEmo(cs);
+  }
+  else if(h.indexOf('scene')===0){                 /* #scenes · #scene-futsal … */
+    var sk=h.split('-')[1];
+    if(sk){ setScene(sk); startSession(); } else openScenes();
+  }
+  else if(h.indexOf('other-')===0){                /* #other-injeol — 상대역 교체 후 세션 */
+    setOther(h.slice(6)); startSession();
+  }
+  else if(h==='demo'){ force('demo'); }            /* 시범 구간으로 바로 진입 */
+  else if(h==='party'){ showReward('party'); }
+  else if(h==='pound'){ showReward('pound'); }
+  else if(h==='pool'){ showReward('pool'); }
+  else if(h==='reward'){ reward(); }
+  else if(['idle','listening','thinking','speaking','canthear'].indexOf(h)>=0){ force(h); }
+  else if(h==='talk'){ force('speaking'); }
+}
+function fit(){
+  var f=$('frame');
+  var sh=(window.innerHeight-120)/1180, sw=(window.innerWidth-40)/820;
+  var s=Math.min(sh,sw,1);
+  f.style.transform='scale('+s+')';
+  f.style.margin=(-1180*(1-s)/2)+'px '+(-820*(1-s)/2)+'px';
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="512" height="512">
+  <style>
+    .eye{fill:#3B3222}
+    .eye-arc{display:none;fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round}
+    .brows{display:none}
+    .brow{fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round}
+    .mouth{display:none;fill:none;stroke:#3B3222;stroke-width:6;stroke-linecap:round}
+    .m-grin,.m-o{fill:#7A4A48;stroke:none}
+    .m-smile{display:block}          /* idle 기본 표정 */
+    .extras>*{display:none}
+    .blush ellipse{fill:#F09AA8;opacity:.6}
+    .tear{fill:#7FB3E8} .sweat{fill:#9CC9F0} .spark path{fill:#FFC12E}
+    .dots,.hand{display:none}
+    .yk-syrup{display:none}         /* 약과 화해 조청 — 연출 중에만 */
+    .kk-drip{display:none}          /* 꿀떡 흘러넘치는 방울 — 누를 때만 */
+    .honey-coat{display:none}       /* 무지개떡 꿀 코팅 — 완성 보상에서만 */
+    .pat-burst{display:none}
+  </style>
+<path d="M118,52 L172,20" stroke="#C89A4E" stroke-width="9" stroke-linecap="round" fill="none"/><ellipse cx="178" cy="18" rx="17" ry="12" fill="#E7B45C"/><path d="M44,74 h132 l-13,92 a16,16 0 0 1 -16,14 h-74 a16,16 0 0 1 -16,-14 Z" fill="#E7B45C"/><path d="M62,104 q48,20 96,0 l-9,62 a14,14 0 0 1 -14,12 h-50 a14,14 0 0 1 -14,-12 Z" fill="#F4D492" opacity=".62"/><rect x="34" y="54" width="152" height="28" rx="13" fill="#F0C878"/><ellipse cx="110" cy="60" rx="62" ry="10" fill="#D99F2E"/><path d="M52,72 q10,26 22,10 q10,30 22,8 q12,32 24,6 q12,28 24,4 q10,22 20,6 l-4,-30 h-112 z" fill="#EDAE3C"/>
+</svg>
