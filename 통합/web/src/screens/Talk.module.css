@@ -1,0 +1,46 @@
+/* 아이 화면: 스크롤 없음, 한 화면 한 행동 (uiux기획/CLAUDE.md:54). */
+
+.start, .talk {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;                 /* 규칙 2: 인접 조작 요소 최소 간격 */
+  padding: 24px;
+  overflow: hidden;          /* 아이 화면은 스크롤하지 않는다 */
+  background: var(--bg);
+}
+
+.today {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ink);
+  text-align: center;
+  margin: 0;
+}
+
+.stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.bubble {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: center;
+  max-width: 22ch;
+  min-height: 2.9em;         /* 대사 길이가 바뀌어도 레이아웃이 튀지 않는다 */
+  margin: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

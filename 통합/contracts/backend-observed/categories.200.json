@@ -1,0 +1,12 @@
+{
+  "_captured": "2026-08-04",
+  "_desc": "GET /api/categories — 래퍼 없는 bare object. Record<CategoryId,string>",
+  "_status": 200,
+  "_note": null,
+  "body": {
+    "ownership_turn": "소유권/순서 마찰 (예: 장난감 뺏기, 새치기)",
+    "physical_boundary": "신체적 경계 침범 (예: 원치 않는 포옹, 장난으로 치고 가기)",
+    "verbal_discomfort": "언어적 불편함 (예: 싫어하는 별명 부르기)",
+    "rule_violation": "놀이 규칙 위반 (예: 술래잡기에서 규칙 안 지키기)"
+  }
+}

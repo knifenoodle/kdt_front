@@ -1,0 +1,10 @@
+{
+  "_captured": "2026-08-05",
+  "_desc": "POST /api/generate 잘못된 키 — detail이 STRING이며 SDK 예외 원문이 클라이언트로 누출된다(D-6). BFF가 이를 차단한다.",
+  "_status": 502,
+  "_note": null,
+  "_redacted": "키 문자열은 저장 전 마스킹함",
+  "body": {
+    "detail": "AI 호출 중 오류가 발생했습니다: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'API key not valid. Please pass a valid API key.', 'status': 'INVALID_ARGUMENT', 'details': [{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'API_KEY_INVALID', 'domain': 'googleapis.com', 'metadata': {'service': 'generativelanguage.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'API key not valid. Please pass a valid API key.'}]}}"
+  }
+}

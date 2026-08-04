@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
+  <style>
+    .eye{fill:#3B3222}
+    .eye-arc{display:none;fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round}
+    .brows{display:none}
+    .brow{fill:none;stroke:#3B3222;stroke-width:7;stroke-linecap:round}
+    .mouth{display:none;fill:none;stroke:#3B3222;stroke-width:6;stroke-linecap:round}
+    .m-grin,.m-o{fill:#7A4A48;stroke:none}
+    .m-smile{display:block}          /* idle 기본 표정 */
+    .extras>*{display:none}
+    .blush ellipse{fill:#F09AA8;opacity:.6}
+    .tear{fill:#7FB3E8} .sweat{fill:#9CC9F0} .spark path{fill:#FFC12E}
+    .dots,.hand{display:none}
+    .yk-syrup{display:none}         /* 약과 화해 조청 — 연출 중에만 */
+    .kk-drip{display:none}          /* 꿀떡 흘러넘치는 방울 — 누를 때만 */
+    .honey-coat{display:none}       /* 무지개떡 꿀 코팅 — 완성 보상에서만 */
+    .pat-burst{display:none}
+  </style>
+<g class="body"><g class="yk-syrup"><path d="M100,86 q-7,16 0,32 q7,16 0,32" fill="none" stroke="#E8A93C" stroke-width="7" stroke-linecap="round"/><path d="M100,96 q6,14 0,28"  fill="none" stroke="#F3D08A" stroke-width="4" stroke-linecap="round"/></g><g class="yk-l"><circle cx="74.5" cy="143.5" r="20" fill="#E3B472"/><circle cx="64.0" cy="118.0" r="20" fill="#E3B472"/><circle cx="74.5" cy="92.5" r="20" fill="#E3B472"/></g><g class="yk-r"><circle cx="136.0" cy="118.0" r="20" fill="#E3B472"/><circle cx="125.5" cy="143.5" r="20" fill="#E3B472"/><circle cx="125.5" cy="92.5" r="20" fill="#E3B472"/></g><g class="yk-c"><circle cx="100.0" cy="154.0" r="20" fill="#E3B472"/><circle cx="100.0" cy="82.0" r="20" fill="#E3B472"/><circle cx="100" cy="118" r="40" fill="#EFC98F"/></g><g class="face"><g class="brows"><path class="brow bl" d="M67,85 q15,-9 30,0"/><path class="brow br" d="M103,85 q15,-9 30,0"/></g><g class="eyes"><ellipse class="eye" cx="82" cy="112" rx="6.5" ry="7.8"/><ellipse class="eye" cx="118" cy="112" rx="6.5" ry="7.8"/><path class="eye-arc" d="M71,115 q11,-15 22,0"/><path class="eye-arc" d="M107,115 q11,-15 22,0"/></g><path class="mouth m-smile" d="M84,136 q16,16 32,0"/><path class="mouth m-flat"  d="M87,140 h26"/><ellipse class="mouth m-open" cx="100" cy="142" rx="14" ry="12"/><path class="mouth m-grin"  d="M79,133 q21,28 42,0 Z"/><path class="mouth m-frown" d="M85,145 q15,-15 30,0"/><path class="mouth m-wavy"  d="M82,140 q9,-9 18,0 q9,9 18,0"/><ellipse class="mouth m-o"  cx="100" cy="141" rx="9" ry="12"/><g class="extras"><g class="blush"><ellipse cx="67" cy="128" rx="12" ry="7"/><ellipse cx="133" cy="128" rx="12" ry="7"/></g><path class="tear"  d="M82,125 c-6,9 -9,13 -9,17 a9,9 0 0 0 18,0 c0,-4 -3,-8 -9,-17 Z"/><path class="sweat" d="M140,76 c-5,8 -8,11 -8,15 a8,8 0 0 0 16,0 c0,-4 -3,-7 -8,-15 Z"/><g class="spark"><path transform="translate(54,80)" d="M0,-9 L2.5,-2.5 L9,0 L2.5,2.5 L0,9 L-2.5,2.5 L-9,0 L-2.5,-2.5 Z"/><path transform="translate(146,76)" d="M0,-9 L2.5,-2.5 L9,0 L2.5,2.5 L0,9 L-2.5,2.5 L-9,0 L-2.5,-2.5 Z"/><path transform="translate(138,138)" d="M0,-9 L2.5,-2.5 L9,0 L2.5,2.5 L0,9 L-2.5,2.5 L-9,0 L-2.5,-2.5 Z"/></g></g></g></g>
+</svg>

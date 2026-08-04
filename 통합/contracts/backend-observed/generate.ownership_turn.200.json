@@ -1,0 +1,19 @@
+{
+  "_captured": "2026-08-05",
+  "_desc": "POST /api/generate 정상 — Scenario 6필드. 원본 prompt_config(초등 저학년) 기준 baseline",
+  "_status": 200,
+  "_note": null,
+  "body": {
+    "scenarios": [
+      {
+        "category": "ownership_turn",
+        "scenario_title": "내가 가지고 놀던 빨간 자동차",
+        "background": "유치원에서 자유놀이 시간에 멋진 도로를 만들고 있었어요. 내가 좋아하는 빨간 자동차를 막 출발시키려던 참이었어요.",
+        "conflict_trigger": "친구 민이가 갑자기 다가와서 빨간 자동차를 손에서 쓱 가져가 버렸어요.",
+        "learning_goal": "내가 사용 중인 물건을 친구가 가져갔을 때 당황하지 않고 내가 쓰고 있음을 말로 정중하게 표현한다.",
+        "ai_first_message": "야, 이 빨간 자동차 진짜 멋지다! 내가 지금 가지고 놀래!"
+      }
+    ],
+    "issues": []
+  }
+}

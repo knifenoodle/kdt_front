@@ -1,0 +1,22 @@
+{
+  "_captured": "2026-08-04",
+  "_desc": "POST /api/generate num_scenarios=9 — Pydantic 위반. detail이 ARRAY. M3 증거",
+  "_status": 422,
+  "_note": null,
+  "body": {
+    "detail": [
+      {
+        "type": "less_than_equal",
+        "loc": [
+          "body",
+          "num_scenarios"
+        ],
+        "msg": "Input should be less than or equal to 5",
+        "input": 9,
+        "ctx": {
+          "le": 5
+        }
+      }
+    ]
+  }
+}

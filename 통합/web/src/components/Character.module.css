@@ -1,0 +1,106 @@
+/* mockup-v1.html:183-330 이식.
+   기능 상태(data-state)는 아래 (1), 감정(data-emo)은 (2). 두 축이 겹쳐서 동작한다. */
+
+.character { display: block; }
+.character :global(svg) { width: 100%; height: 100%; overflow: visible; }
+
+/* ── (1) 기능 상태 ─────────────────────────────────────────────── */
+.character[data-state='idle']     :global(.m-smile) { display: block; }
+.character[data-state='listening'] :global(.m-smile) { display: block; }
+.character[data-state='thinking'] :global(.m-flat)  { display: block; }
+.character[data-state='canthear'] :global(.m-flat)  { display: block; }
+
+/* 호흡 = 살아 있다는 신호. 상태마다 주기를 달리해 "무엇을 하는 중인가"를 호흡으로도 읽게 한다.
+   🚨 어떤 상태에서도 멈추지 않는다 — 정지하면 화면이 죽은 것처럼 보인다. */
+.character[data-state='idle']      :global(.body) { animation: breathe 3.4s ease-in-out infinite; }
+.character[data-state='listening'] :global(.body) { animation: breathe 2.6s ease-in-out infinite; }
+.character[data-state='thinking']  :global(.body) { animation: breathe 4.2s ease-in-out infinite; }
+.character[data-state='canthear']  :global(.body) { animation: breathe 3s ease-in-out infinite; }
+.character :global(.body) { transform-box: fill-box; transform-origin: bottom center; }
+
+.character :global(.eyes) { animation: blink 5.2s infinite; transform-box: fill-box; transform-origin: center; }
+
+/* listening: 몸이 살짝 기울고 눈이 커진다 */
+.character[data-state='listening'] { transform: rotate(-5deg); }
+.character[data-state='listening'] :global(.eye) { --eye-sx: 1.25; --eye-sy: 1.25; }
+
+/* thinking: 고개 갸웃 + 점 세 개. 🚨 로딩 스피너를 쓰지 않는다(uiux기획/CLAUDE.md:128) */
+.character[data-state='thinking'] { transform: rotate(6deg); }
+.character[data-state='thinking'] :global(.dots) { display: block; }
+.character :global(.dots circle) { animation: dot 1.1s infinite; }
+.character :global(.dots circle:nth-child(2)) { animation-delay: 0.18s; }
+.character :global(.dots circle:nth-child(3)) { animation-delay: 0.36s; }
+
+/* cantHear: 손을 귀에. 실패가 아니라 캐릭터의 부탁이다 */
+.character[data-state='canthear'] :global(.hand) { display: block; }
+.character[data-state='canthear'] { transform: rotate(-8deg); }
+
+/* speaking: 입 모양 */
+.character[data-state='speaking'] :global(.mouth) { display: none; }
+.character[data-state='speaking'] :global(.m-open) { display: block; animation: talk 0.26s infinite alternate; }
+.character :global(.m-open) { transform-box: fill-box; transform-origin: center; }
+
+/* ── (2) 감정 레이어 ───────────────────────────────────────────── */
+
+/* 눈썹은 화남에만. 떡에는 눈썹이 없는 게 자연스럽고 나머지 감정은 눈·입·부속으로 읽힌다.
+   🚨 뿔·김(스팀)·혈관·붉은 얼굴을 쓰지 않는다(캐릭터_가이드_v1.md:317-320) */
+.character[data-emo='angry'] :global(.brows) { display: block; }
+.character[data-emo='angry'] :global(.bl) { transform: translateY(6px) rotate(17deg); }
+.character[data-emo='angry'] :global(.br) { transform: translateY(6px) rotate(-17deg); }
+
+/* 눈 */
+.character[data-emo='joy'] :global(.eye),
+.character[data-emo='shy'] :global(.eye) { display: none; }
+.character[data-emo='joy'] :global(.eye-arc),
+.character[data-emo='shy'] :global(.eye-arc) { display: block; }
+.character[data-emo='joy'] :global(.eyes),
+.character[data-emo='shy'] :global(.eyes) { animation: none; }
+.character[data-emo='angry'] :global(.eye) { --eye-sy: 0.72; }
+.character[data-emo='sad'] :global(.eye) { --eye-sx: 1.14; --eye-sy: 1.14; }
+.character[data-emo='scared'] :global(.eye) { --eye-sx: 1.32; --eye-sy: 0.74; transform-origin: top center; }
+.character[data-emo='surprised'] :global(.eye) { --eye-sx: 1.45; --eye-sy: 1.45; }
+
+/* 입 */
+.character[data-emo='joy'] :global(.mouth) { display: none; }
+.character[data-emo='joy'] :global(.m-grin) { display: block; }
+.character[data-emo='sad'] :global(.mouth) { display: none; }
+.character[data-emo='sad'] :global(.m-frown) { display: block; }
+.character[data-emo='angry'] :global(.mouth) { display: none; }
+.character[data-emo='angry'] :global(.m-wavy) { display: block; }
+.character[data-emo='scared'] :global(.mouth) { display: none; }
+.character[data-emo='scared'] :global(.m-o) { display: block; }
+.character[data-emo='surprised'] :global(.mouth) { display: none; }
+.character[data-emo='surprised'] :global(.m-open) { display: block; }
+.character[data-emo='shy'] :global(.mouth) { display: none; }
+.character[data-emo='shy'] :global(.m-smile) { display: block; }
+
+/* 부속 */
+.character[data-emo='joy'] :global(.blush),
+.character[data-emo='shy'] :global(.blush) { display: block; }
+.character[data-emo='shy'] :global(.blush ellipse) { opacity: 0.9; }
+.character[data-emo='sad'] :global(.tear) { display: block; animation: teardrop 2.6s ease-in infinite; }
+.character[data-emo='scared'] :global(.sweat) { display: block; animation: teardrop 3s ease-in infinite; }
+.character[data-emo='joy'] :global(.spark) { display: block; animation: twinkle 1.7s ease-in-out infinite; }
+.character[data-emo='angry'] :global(.blush) { display: block; }
+.character[data-emo='angry'] :global(.blush ellipse) { fill: var(--character); opacity: 0.32; }
+
+.character[data-emo='surprised'] :global(.body) { animation: jolt 0.5s ease-out; }
+.character[data-emo='scared'] :global(.body) { animation: tremble 0.13s linear infinite; }
+
+/* 감정별 부속 규칙의 명시도가 (0,2,0)이라 !important 로 눌러야 한다 */
+.character[data-emo-soft='1'] :global(.extras > *) { display: none !important; }
+
+/* ── 키프레임 ──────────────────────────────────────────────────── */
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+@keyframes blink   { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes talk    { from { transform: scaleY(0.45); } to { transform: scaleY(1); } }
+@keyframes dot     { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes teardrop{ 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(14px); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes jolt    { 0% { transform: translateY(0); } 30% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
+@keyframes tremble { 0%, 100% { transform: translateX(-1.5px); } 50% { transform: translateX(1.5px); } }
+
+/* 접근성: 움직임 최소화 요청 시 애니메이션 전부 정지 */
+@media (prefers-reduced-motion: reduce) {
+  .character :global(*) { animation: none !important; transition: none !important; }
+}

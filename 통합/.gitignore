@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 🚨 시크릿 — 절대 커밋하지 않는다.
+# GEMINI_API_KEY 는 환경변수로만 전달한다. server/.env.example 이 형식 예시.
+.env
+*.env
+!.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+
+# 벡터 스토어 (dormant)
+.chroma_rules/

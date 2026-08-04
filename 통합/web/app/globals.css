@@ -1,0 +1,38 @@
+/* 토큰은 src/tokens/index.ts 가 단일 원천이다.
+   여기의 값은 그 미러이며 check-safety-rules.mjs 가 일치를 검사한다. */
+:root {
+  --bg: #F4F1FB;
+  --surface: #FFFFFF;
+  --action: #FFC12E;
+  --success: #2FB477;
+  --character: #FF8A47;
+  --ink: #2B3A55;
+  --ink-soft: #6B7B99;
+
+  --tap-min: 76px;
+  --tap-primary: 88px;
+  --gap: 16px;
+  --dur-instant: 100ms;
+  --dur-normal: 220ms;
+  --dur-slow: 400ms;
+}
+
+/* 🚨 오류 색 토큰이 존재하지 않는다 — uiux기획/CLAUDE.md:81
+   "빨강은 오류 표시에 쓰지 않는다. 아이 화면에 오류 색 자체가 없다."
+   --error / --danger 를 추가하지 말 것. */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* 규칙 4 검증용 훅: 이 클래스를 전부 숨겨도 아이가 다음 행동을 알 수 있어야 한다.
+   DevTools 에서 `.txt{visibility:hidden}` 을 주입해 확인한다(docs/05 검증 절차 (4)). */
+.txt { }

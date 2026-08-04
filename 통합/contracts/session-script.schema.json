@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ttorang.local/contracts/session-script.schema.json",
+  "title": "SessionScript",
+  "description": "또랑 세션 1회의 완전한 대사 스크립트. BFF의 SessionScriptAdapter가 생성하고 web이 소비한다. 이 스키마가 단일 진실 원천이며 TS 타입과 Pydantic 모델은 여기서 파생/대조한다. 설계 제약: (1) snake_case 키 — 백엔드 Pydantic으로 그대로 표현 가능해야 한다. (2) category는 백엔드 4값 enum을 복사하며 리네이밍하지 않는다. (3) 어댑터가 template_deck → backend_session으로 교체될 때 이 스키마와 web 코드는 바뀌지 않아야 한다.",
+  "type": "object",
+  "required": ["schema_version", "session_id", "category", "skill", "age_band", "scene", "partner", "other", "retry_max", "lines", "turns", "source", "parent_meta"],
+  "additionalProperties": false,
+
+  "$comment": "금지 필드: name, nickname, birthdate, birth_year, child_id, school, grade, gender, phone, email. uiux기획/CLAUDE.md:107 '아이 온보딩에서 이름·생년월일을 받지 않는다. 필요한 건 연령대(4/5/6세)뿐'. additionalProperties:false + M7 계약 테스트가 이를 강제한다.",
+
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "description": "출처: 신설. 스키마 진화 추적."
+    },
+
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}$",
+      "description": "출처: 신설. 서버 생성 불투명 식별자. 아동 식별정보를 포함하지 않으며 영속 저장되지 않는다(무상태). 로그 상관용."
+    },
+
+    "category": {
+      "enum": ["ownership_turn", "physical_boundary", "verbal_discomfort", "rule_violation"],
+      "description": "출처: 백엔드 실측. rule_engine/scenario_generator.py:52-56 ScenarioCategory enum과 prompts/prompt_config.json:4-9의 4키. 백엔드 절대 기준 — 리네이밍 금지."
+    },
+
+    "skill": {
+      "enum": ["greet", "request", "apologize", "refuse", "take_turns"],
+      "description": "출처: UI 요구. uiux기획/CLAUDE.md:3의 5개 사회적 상황(인사·부탁·사과·거절·차례 지키기). 백엔드 category와 다른 축이며 의도적으로 분리했다 — category를 이 5값으로 덮으면 백엔드 taxonomy를 침범한다. 매핑은 docs/02_충돌해결_매트릭스.md 참조(현재 refuse↔ownership_turn, take_turns↔rule_violation만 성립)."
+    },
+
+    "age_band": {
+      "enum": ["4", "5", "6"],
+      "description": "출처: UI 요구(uiux기획/CLAUDE.md:107). 아동에게서 수집 가능한 유일한 연령 정보. 생년월일·나이 정수를 받지 않는다. BFF가 이 값을 백엔드의 자유문자열 age_range로 번역한다(CS-005 대응: 사용자 문자열이 system_instruction에 직접 도달하지 않게 하는 화이트리스트 경계)."
+    },
+
+    "scene": {
+      "enum": ["class", "play", "kids", "cvs", "stat", "variety", "dept", "cinema", "futsal", "dojang"],
+      "description": "출처: UI 요구. mockup-v1.html:1411-1423 SCENES 10종의 키. 캐릭터연출_기획_v1.md §2-D에서 8→10곳으로 승인됨."
+    },
+
+    "partner": {
+      "const": "songpyeon",
+      "description": "출처: UI 요구. mockup-v1.html:1520 PARTNER='송편'. 교체되지 않는 조력자이므로 const. 에셋: 캐릭터_에셋/svg/songpyeon-{white,pink,green}.svg"
+    },
+
+    "other": {
+      "enum": ["sirutteok", "garaetteok", "injeolmi", "kkultteok", "yakgwa", "baekseolgi"],
+      "description": "출처: UI 요구. mockup-v1.html:1521-1528 OTHERS. 값은 캐릭터_에셋/svg/ 파일명 stem과 1:1 일치한다(목업의 한글 표시명 '시루떡'은 web 로스터에서 해석). category로부터 어댑터가 선택."
+    },
+
+    "retry_max": {
+      "type": "integer",
+      "const": 2,
+      "description": "출처: UI 요구. mockup-v1.html:1827 RETRY_MAX=2 + 캐릭터연출_기획_v1.md:653-663 사용자 결정 ②(2회·함께 말하기). 재시도는 턴을 소비하지 않는다(S2 불변식). const로 고정해 임의 상향을 차단한다."
+    },
+
+    "lines": {
+      "type": "object",
+      "description": "출처: UI 요구 + 저작. 세션 전체에서 턴에 속하지 않는 시스템 대사. web/src/audio/lines.ts가 유일한 소유자이며 컴포넌트는 문자열 리터럴을 갖지 않는다(uiux기획/CLAUDE.md:55 규칙 9).",
+      "required": ["ai_disclosure", "intro", "demo_in", "demo", "wait", "cant", "cheer", "party"],
+      "additionalProperties": false,
+      "properties": {
+        "ai_disclosure": {
+          "$ref": "#/$defs/line",
+          "description": "출처: 신설(규제 필수). GOV-003-R1이 요구하는 아동 대상 AI 고지. 만 4~6세 어휘로 글자 없이 음성 1~2문장. 첫 세션에서 1회 재생됨을 S8 불변식이 강제한다. 목업(mockup-v1.html:1701-1705)은 송편/시루떡을 고지 없이 친구로 제시하므로 이것은 목업에 없던 신설 항목이다."
+        },
+        "intro": { "$ref": "#/$defs/line", "description": "상황 안내. 백엔드 Scenario.background가 여기에 주입된다." },
+        "demo_in": { "$ref": "#/$defs/line", "description": "시범 예고. '먼저 내가 어떻게 말하는지 보여줄게.'" },
+        "demo": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/line" },
+          "description": "시범 3줄. 아이는 듣기만 한다. 단호한 거절 → 상대가 물러남의 모범 시연. mockup-v1.html:905-909."
+        },
+        "wait": { "$ref": "#/$defs/line", "description": "thinking 3초 초과 시. uiux기획/CLAUDE.md:91 '조금만 기다려줘'." },
+        "cant": { "$ref": "#/$defs/line", "description": "cantHear 상태. uiux기획/CLAUDE.md:95 '실패가 아니라 캐릭터의 부탁으로 표현한다. 아이 탓으로 만들지 않는다.'" },
+        "cheer": { "$ref": "#/$defs/line", "description": "칭찬. 유일한 평가성 발화이며 항상 긍정이다(규칙 6). mockup-v1.html:912." },
+        "party": { "$ref": "#/$defs/line", "description": "보상 진입." }
+      }
+    },
+
+    "turns": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "출처: UI 요구(백엔드 부재 — 신설). 정확히 3턴. uiux기획/CLAUDE.md:53 '세션은 끝난다: 무한 루프 없음. 대화 3턴이면 보상 화면 → 종료 안내'. 백엔드는 ai_first_message 1줄만 emit하므로 turns[0].ask 외 14줄은 저작 데크에서 온다.",
+      "items": {
+        "type": "object",
+        "required": ["emo", "back_emo", "ask", "hint", "sup1", "sup2", "back"],
+        "additionalProperties": false,
+        "properties": {
+          "emo": {
+            "$ref": "#/$defs/emotion",
+            "description": "상대역이 '물어볼 때'의 감정. 상황에 대한 반응이다."
+          },
+          "back_emo": {
+            "$ref": "#/$defs/emotion",
+            "description": "아이 발화 '뒤' 상대역 감정. ⚠️ 이것은 아이 발화의 채점이 아니라 상황 전개의 결과다 — 3턴에 걸쳐 화남→아쉬움→기쁨으로 누그러지는 방향만 허용된다(캐릭터_가이드_v1.md §5). 파트너(송편)의 감정은 아이 발화에 절대 바인딩되지 않는다(S1 불변식, mockup-v1.html:1609-1613)."
+          },
+          "ask": {
+            "$ref": "#/$defs/line",
+            "description": "상대역의 요구. turns[0].ask.t에는 백엔드 Scenario.ai_first_message가 **가공 없이 그대로** 들어간다 — 이것이 수직 슬라이스의 증명 대상이다."
+          },
+          "hint": { "$ref": "#/$defs/line", "description": "지원 0단계. 파트너가 제안." },
+          "sup1": { "$ref": "#/$defs/line", "description": "지원 1단계(재시도 1회). 더 구체적인 힌트." },
+          "sup2": { "$ref": "#/$defs/line", "description": "지원 2단계(재시도 2회 = retry_max). '함께 말하기'. 벌이 아니라 지원 수준 상향이며 이 단계에서 턴을 완결시킨다." },
+          "back": { "$ref": "#/$defs/line", "description": "아이 발화 뒤 상대역의 응답." }
+        }
+      }
+    },
+
+    "source": {
+      "type": "object",
+      "description": "출처: 신설. 어댑터 교체 시 계약 검증용 추적 정보. 개발자·테스트 전용이며 아이 화면에 도달하지 않는다.",
+      "required": ["adapter", "backend_scenario_present", "backend_fields_used", "fallback_reason"],
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "enum": ["template_deck", "derived", "backend_session"],
+          "description": "template_deck = 1단계 구현(저작 데크 + 백엔드 값 주입). derived = Phase 2(산문 파생). backend_session = Phase 3(백엔드가 턴 트리 직접 생성). ⚠️ backend_session 전환에는 선행조건 4건이 있다 — docs/06_ADR/ADR-002 참조. validator.py:29-30 _flatten_text가 중첩 필드를 스캔하지 않으므로(CS-006) 그 수정 전에 켜면 아동 안전 회귀다."
+        },
+        "backend_scenario_present": {
+          "type": "boolean",
+          "description": "백엔드가 유효한 Scenario를 반환했는가. false면 저작 폴백 데크만으로 세션이 구성됐다는 뜻이며, **아이 화면은 이 차이를 인지할 수 없어야 한다**(M4)."
+        },
+        "backend_fields_used": {
+          "type": "array",
+          "items": { "enum": ["ai_first_message", "background", "scenario_title", "learning_goal", "conflict_trigger", "category"] },
+          "description": "실제로 주입에 사용된 백엔드 필드. 주입 규칙은 docs/01_인터페이스_계약서.md의 주입 표가 정본이다."
+        },
+        "fallback_reason": {
+          "type": ["string", "null"],
+          "enum": ["no_api_key", "empty_scenarios", "upstream_error", "timeout", "invalid_category", null],
+          "description": "폴백 사유. null이면 백엔드 값이 정상 주입됨. ⚠️ 이 값은 절대 아이 화면에 노출되지 않는다(uiux기획/CLAUDE.md:81 아이 화면에 오류 색 자체가 없다). /api/health와 dev 하네스에서만 관측된다."
+        }
+      }
+    },
+
+    "parent_meta": {
+      "type": "object",
+      "description": "출처: 백엔드 실측(필드 그대로) + 신설(구조). 🚨 아이 화면 노출 금지 — 보호자 게이트(두 자리 덧셈, uiux기획/CLAUDE.md:100) 뒤에서만 렌더한다. 캐릭터_가이드_v1.md:537-543 판정.",
+      "required": ["scenario_title", "learning_goal", "conflict_trigger", "dev_issues"],
+      "additionalProperties": false,
+      "properties": {
+        "scenario_title": { "type": "string", "description": "백엔드 Scenario.scenario_title. 보호자 화면 세션 제목." },
+        "learning_goal": { "type": "string", "description": "백엔드 Scenario.learning_goal." },
+        "conflict_trigger": { "type": "string", "description": "백엔드 Scenario.conflict_trigger." },
+        "dev_issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule_id", "field", "message", "severity"],
+            "additionalProperties": false,
+            "properties": {
+              "rule_id": { "type": "string", "description": "관측값: OUTPUT_FORMAT, LEGAL-001, LEGAL-002, ETH-002, GDL-002" },
+              "field": { "type": "string" },
+              "message": { "type": "string" },
+              "severity": { "enum": ["critical", "high"], "description": "백엔드 실측 2값" }
+            }
+          },
+          "description": "🚨 **개발자 전용. 보호자에게 절대 노출 금지.** 백엔드 issues[]는 (a) 시나리오 인덱스를 갖지 않아 어느 시나리오가 거부됐는지 매핑 불가하고(webapp/main.py:77-82) (b) 재시도 시도 간 중복이 누적된다. 보호자 화면에 그대로 띄우면 '당신 아이 세션에서 규칙 위반 3건'으로 오독된다 — LEGAL-002-R4(낙인 금지) 위반 위험."
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "line": {
+      "type": "object",
+      "description": "아이가 듣게 되는 발화 1개. 🚨 t가 speak()에 도달하기 전 반드시 sanitizeForChild()를 경유해야 한다(S4 불변식, CS-001). 백엔드 문자열이 무검증으로 TTS에 도달하는 것이 통합의 최대 신규 위험이다 — validator.py:11-15의 20단어 블랙리스트는 자해·성적 내용·무언어 집단배제를 전부 통과시킨다(실측).",
+      "required": ["who", "t"],
+      "additionalProperties": false,
+      "properties": {
+        "who": {
+          "enum": ["songpyeon", "sirutteok", "garaetteok", "injeolmi", "kkultteok", "yakgwa", "baekseolgi"],
+          "description": "화자 캐릭터 id. 캐릭터_에셋/svg/ 파일명 stem과 일치. 한글 표시명은 web 로스터에서 해석한다."
+        },
+        "t": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "발화 텍스트(한국어 반말 구어체). maxLength 120은 GDL-001-R1(문장 15단어 내외)의 기계적 상한 근사이며, sanitizeForChild()의 길이 상한과 일치시킨다. 아이는 글자를 못 읽으므로 이 텍스트의 1차 용도는 TTS이고 화면 표시는 보조 레이어다(uiux기획/CLAUDE.md:47-48 규칙 4)."
+        },
+        "emo": {
+          "anyOf": [{ "$ref": "#/$defs/emotion" }, { "type": "null" }],
+          "description": "이 발화 중 화자 감정(선택). null/생략 시 기능 상태(speaking 등)가 표정을 정한다 — 감정을 지정하지 않는 것이 기본이며, 지정은 연출이 필요한 곳에만 한다."
+        }
+      }
+    },
+
+    "emotion": {
+      "enum": ["none", "joy", "sad", "angry", "surprised", "shy", "scared"],
+      "description": "출처: UI 요구. mockup-v1.html:2137 EMOS + 캐릭터_가이드_v1.md. 🚨 'angry'는 뿔·김(스팀)·혈관·붉은 얼굴을 쓰지 않는다(캐릭터_가이드_v1.md:317-320). 빨강은 아이 화면 전체에서 오류 표시에 쓰이지 않는다(uiux기획/CLAUDE.md:81)."
+    }
+  }
+}
