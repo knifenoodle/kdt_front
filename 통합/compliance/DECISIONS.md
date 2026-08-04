@@ -30,8 +30,9 @@
 **파급 파일**
 - `server/prompts/prompt_config.ttorang.json` (벤더링, `system_role`·`language_level`)
 - `web/src/config/audience.ts` (S10 단일 소스)
-- 🚨 **`knowledge_base/guideline/GDL-001_아동발달_사회정서_지침.md` 는 아직 "초등 저학년" 기준이다.**
-  CS-003으로 프롬프트에 도달하게 됐지만 내용 자체는 7~9세용이다 → **Phase 2 재작성 필요**
+- ✅ `knowledge_base/guideline/GDL-001_아동발달_사회정서_지침.md` — **2026-08-05 만 4~6세 기준 전면 재작성 완료**
+  (R1 문장 10단어, R5 두~다섯 글자 표현, R6 등장인물 2~3명, R7 시제 참조 금지, R8 상황 악화 금지 신설).
+  `compliance/upstream-patches/CHANGELOG.md` 변경 #3
 - `LEGAL-002-R1`의 전제(초등 학폭 통계)도 유치원 또래 마찰로 재서술 필요
 - `README.md:65-68` 시장 수치가 전부 초1~3 기준 → 사업성 슬라이드 재정렬
 
