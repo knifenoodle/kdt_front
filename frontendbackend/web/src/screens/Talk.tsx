@@ -30,8 +30,9 @@ import { LINES, FALLBACK_DECK, resolveSession, type ResolvedSession } from '@/au
 import { speak, shutUp } from '@/audio/speak';
 import { sfx } from '@/audio/sfx';
 import { fetchSession, type SessionScript } from '@/lib/api';
-import { resetIfComplete } from '@/lib/progress';
-import { initialState, reduce } from '@/lib/session-machine';
+import { getFilled, resetIfComplete } from '@/lib/progress';
+import { nextScenario, rerollPlan } from '@/lib/levelPlan';
+import { initialState, reduce, supportSlot, RETRY_MAX } from '@/lib/session-machine';
 import { PARTNER_SKIN } from '@/assets/characters';
 import styles from './Talk.module.css';
 
@@ -49,6 +50,20 @@ export function Talk() {
   const pending = useRef<Promise<void> | null>(null);
   const waitTimer = useRef<number | null>(null);
   const heartTimers = useRef<number[]>([]);
+  const hintTimer = useRef<number | null>(null);
+  /** 파트너가 지금 힌트/지원 대사를 말하는 중인가 — 캐릭터 상태(speaking/listening) 결정용 */
+  const [promptSpeaking, setPromptSpeaking] = useState(false);
+  /**
+   * 🚨 H3(docs/10_UIUX_리뷰.md) 수정: `start()`는 탭 시점에 딱 한 번 호출되는
+   * useCallback이라, 그 안에서 `resolved` state를 직접 읽으면 호출 당시 값(늘 null)에
+   * 클로저로 갇힌다 — 이후 fetch가 끝나 `resolved`가 갱신돼도 이미 실행 중인
+   * `say()` 체인은 그 값을 보지 못한다. `ask` 이펙트처럼 매 렌더 최신값을 읽도록
+   * ref로 미러링해, ai_disclosure/intro/demo_in 재생 시점에 이미 도착한 서버 값을 쓴다.
+   */
+  const resolvedRef = useRef<ResolvedSession | null>(null);
+  useEffect(() => {
+    resolvedRef.current = resolved;
+  }, [resolved]);
 
   /** 🚨 서버 스크립트는 반드시 resolveSession() 을 경유한다(S4). */
   const adopt = useCallback((sc: SessionScript) => {
@@ -57,9 +72,12 @@ export function Talk() {
   }, []);
 
   // 인트로 내레이션 중 prefetch (M5)
+  // 🚨 레벨×변이는 실제 발화 판정이 아니라 완주 횟수(무지개떡 층수)로만 진행된다(D2 — STT 제외).
+  // 레벨시스템 v1.2 §2-3/§2-5 A안, lib/levelPlan.ts 참조.
   const prefetch = useCallback(() => {
     if (pending.current) return pending.current;
-    pending.current = fetchSession({ category: 'ownership_turn' })
+    const plan = nextScenario(getFilled());
+    pending.current = fetchSession({ category: 'ownership_turn', level: plan.level, variation: plan.variation, scene: plan.scene })
       .then(adopt)
       .catch(() => {
         /* 🚨 아이 화면은 실패를 인지하지 않는다. 저작 폴백으로 계속한다.
@@ -79,16 +97,17 @@ export function Talk() {
     setScreen('talk');
     void prefetch();
 
-    const l = resolved?.lines;
-    // 고지 → 인트로 → 시범 예고 순. AI 고지는 첫 세션에서 1회 재생된다(S8).
-    say('songpyeon', l?.ai_disclosure.t ?? LINES.aiDisclosure.t, () => {
-      say('songpyeon', l?.intro.t ?? FALLBACK_DECK.intro.t, () => {
-        say('songpyeon', l?.demo_in.t ?? FALLBACK_DECK.demoIn.t, () => {
+    // 🚨 각 단계마다 resolvedRef.current를 다시 읽는다(H3 수정) — ai_disclosure 재생 중에도
+    // prefetch는 계속 진행되므로, intro/demo_in 차례가 됐을 때는 그 사이 도착한 최신
+    // 서버 값(레벨×변이별 상황 안내·시범)을 써야 한다. 아직 안 왔으면 폴백을 쓴다.
+    say('songpyeon', resolvedRef.current?.lines.ai_disclosure.t ?? LINES.aiDisclosure.t, () => {
+      say('songpyeon', resolvedRef.current?.lines.intro.t ?? FALLBACK_DECK.intro.t, () => {
+        say('songpyeon', resolvedRef.current?.lines.demo_in.t ?? FALLBACK_DECK.demoIn.t, () => {
           dispatch({ type: 'INTRO_DONE' });
         });
       });
     });
-  }, [prefetch, resolved, say]);
+  }, [prefetch, say]);
 
   // ── 시범 3줄 → turn 1 ask ─────────────────────────────────────
   useEffect(() => {
@@ -132,6 +151,45 @@ export function Talk() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.phase, script]);
 
+  /**
+   * 🚨 지원(힌트) 3단계 배선 — hint(0) → sup1(1) → sup2(2, 함께 말하기).
+   *
+   * STT가 없어 "미통과"를 판정할 수 없으므로(D2), 무응답 시간 초과를 다음 단계로
+   * 넘어가는 트리거로 쓴다. 이는 채점이 아니라 "아직 준비가 안 됐구나"의 신호다 —
+   * 아이가 아무 때나 "말했어요"를 탭하면 그 즉시 CHILD_SPOKE_OK로 전이해 이 타이머는
+   * 무의미해진다(§2-7: 지원 사용 여부와 무관하게 완수로 인정).
+   *
+   * support===2(sup2, 함께 말하기)에 도달하면 그 대사 재생이 끝나는 즉시 턴을
+   * 완결시킨다 — "지원과 함께 해당 턴이 완결된다. 아동을 붙잡아 두지 않는다"(§2-7 확정).
+   */
+  const ESCALATE_MS = 7000;
+  useEffect(() => {
+    if (s.phase !== 'waitForChild') return;
+    const turn = resolved?.turns[s.turn];
+    const slot = supportSlot(s);
+    const line = turn?.[slot];
+    if (!line) return; // 폴백 데크는 지원 대사가 없다 — 저작 폴백 이상은 강요하지 않는다
+
+    setPromptSpeaking(true);
+    say(line.who, line.t, () => {
+      setPromptSpeaking(false);
+      if (s.support >= RETRY_MAX) {
+        // 함께 말하기(sup2) 완료 — 벌이 아니라 지원 상향이며, 여기서 턴이 완결된다.
+        dispatch({ type: 'CHILD_SPOKE_OK' });
+        return;
+      }
+      hintTimer.current = window.setTimeout(() => {
+        dispatch({ type: 'RETRY' });
+      }, ESCALATE_MS);
+    });
+
+    return () => {
+      if (hintTimer.current) window.clearTimeout(hintTimer.current);
+      setPromptSpeaking(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.phase, s.support, s.turn, resolved]);
+
   // ── 턴별 back — 아이가 "말했어요"를 누른 뒤 상대역의 응답 ─────────
   useEffect(() => {
     if (s.phase !== 'respond') return;
@@ -173,7 +231,8 @@ export function Talk() {
     heartTimers.current.forEach((id) => window.clearTimeout(id));
     heartTimers.current = [];
     setHeart('idle');
-    resetIfComplete();
+    // 라운드(6층)가 방금 끝났으면 다음 라운드의 레벨당 변이 조합을 새로 뽑는다(§2-3).
+    if (resetIfComplete()) rerollPlan();
     dispatch({ type: 'RESET' });
     pending.current = null;
     setScript(null);
@@ -189,8 +248,11 @@ export function Talk() {
 
   // 🚨 S1: 파트너(송편)의 감정은 아이 발화에 바인딩되지 않는다.
   // 여기서 emo 를 넘기지 않는 것 자체가 불변식이다 — 판정 결과가 닿을 경로가 없다.
+  // promptSpeaking(힌트/지원 대사 재생 중)이 waitForChild 의 기본 listening 보다 우선한다 —
+  // 그렇지 않으면 파트너가 말하는 도중에도 계속 "듣는" 표정을 짓는다.
   let partnerState: CharState = 'idle';
-  if (s.phase === 'waitForChild') partnerState = 'listening';
+  if (promptSpeaking) partnerState = 'speaking';
+  else if (s.phase === 'waitForChild') partnerState = 'listening';
   else if (waiting) partnerState = 'thinking';
   else if (bubble?.who === 'songpyeon') partnerState = 'speaking';
 

@@ -1,0 +1,140 @@
+{
+  "_source": "신규 저작 — 참고자료/레벨시스템 심화기획안 v1.2.md §3 기준. 레벨2/변이3(소리+행동).",
+  "_safety_notes": [
+    "turns[*].back_emo 궤적 angry/surprised → sad/none → shy/joy 는 누그러지는 방향만이다.",
+    "레벨2: 1턴에서 고른 표현(\"하지 마\")을 3턴 내내 유지해야 하므로 sup2 챈트가 3턴 모두 동일하다.",
+    "변이3 — 상대는 완전한 문장 대신 짧은 소리+행동만 낸다. 파트너가 hint 슬롯에서 즉각 중계한다.",
+    "cheer가 유일한 평가성 발화이며 항상 긍정이다."
+  ],
+  "category": "ownership_turn",
+  "skill": "refuse",
+  "other": "baekseolgi",
+  "level": "2",
+  "variation": "3",
+  "lines": {
+    "ai_disclosure": {
+      "who": "songpyeon",
+      "t": "나는 컴퓨터가 만든 친구야. 그래도 같이 연습할 수 있어!"
+    },
+    "intro": {
+      "who": "songpyeon",
+      "t": "백설기가 말없이 네 앞으로 줄을 새치기하려 해. 싫으면 싫다고 말해도 돼."
+    },
+    "intro_suffix": "싫으면 싫다고 말해도 돼.",
+    "demo_in": {
+      "who": "songpyeon",
+      "t": "먼저 내가 어떻게 말하는지 보여줄게. 잘 봐."
+    },
+    "demo": [
+      {
+        "who": "baekseolgi",
+        "emo": "angry",
+        "t": "음!"
+      },
+      {
+        "who": "songpyeon",
+        "t": "하지 마. 아까도 하지 말라고 했잖아."
+      },
+      {
+        "who": "baekseolgi",
+        "emo": "sad",
+        "t": "아…"
+      }
+    ],
+    "wait": {
+      "who": "songpyeon",
+      "t": "조금만 기다려줘."
+    },
+    "cant": {
+      "who": "songpyeon",
+      "t": "잘 안 들려. 다시 말해줄래?"
+    },
+    "cheer": {
+      "who": "songpyeon",
+      "t": "잘 말했어! 네 마음을 그대로 말했구나."
+    },
+    "party": {
+      "who": "songpyeon",
+      "t": "무지개떡을 다 모았어! 꿀파티다!"
+    }
+  },
+  "turns": [
+    {
+      "emo": "angry",
+      "back_emo": "surprised",
+      "ask": {
+        "who": "baekseolgi",
+        "t": "음!"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "앗, 친구가 말없이 끼어들려고 해! \"하지 마\"라고 말해줄까?"
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 짧게 \"하지 마\"라고만 해도 돼."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"하지 마!\" 해봐."
+      },
+      "back": {
+        "who": "baekseolgi",
+        "t": "어… 음…"
+      }
+    },
+    {
+      "emo": "sad",
+      "back_emo": "none",
+      "ask": {
+        "who": "baekseolgi",
+        "t": "음…"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "친구가 다시 다가오려 해. 아까 말한 대로 다시 말해도 괜찮아."
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 아까 했던 말 그대로 다시 해도 돼."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"하지 마!\" 해봐."
+      },
+      "back": {
+        "who": "baekseolgi",
+        "t": "…응."
+      }
+    },
+    {
+      "emo": "shy",
+      "back_emo": "joy",
+      "ask": {
+        "who": "baekseolgi",
+        "t": "어?"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "마음이 그대로면 아까처럼 말해도 돼."
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 아까 했던 그 말 그대로 해도 충분해."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"하지 마!\" 해봐."
+      },
+      "back": {
+        "who": "baekseolgi",
+        "t": "헤헤! 그럼 뒤에 서 있을게."
+      }
+    }
+  ],
+  "parent_meta_fallback": {
+    "scenario_title": "줄은 순서대로 서는 거야",
+    "learning_goal": "말 없이 끼어드는 친구에게도 처음 한 말을 그대로 유지해서 말하기",
+    "conflict_trigger": "백설기가 말없이 줄을 새치기하려 한다"
+  }
+}

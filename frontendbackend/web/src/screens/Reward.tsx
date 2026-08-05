@@ -23,6 +23,7 @@ import { speak } from '@/audio/speak';
 import { sfx } from '@/audio/sfx';
 import { PARTNER_SKIN } from '@/assets/characters';
 import { getFilled, fillNextLayer, nextRewardKind, type RewardKind } from '@/lib/progress';
+import { isLevelUp } from '@/lib/levelPlan';
 import styles from './Reward.module.css';
 
 interface Props {
@@ -35,8 +36,13 @@ export function Reward({ lines, onReplay }: Props) {
   const [line, setLine] = useState(lines?.cheer.t ?? LINES.cheer.t);
   const [filled, setFilled] = useState(getFilled());
   const [justFilled, setJustFilled] = useState<number | null>(null);
+  const [justLeveledUp, setJustLeveledUp] = useState(false);
   const [rewardKind, setRewardKind] = useState<RewardKind | null>(null);
   const timers = useRef<number[]>([]);
+  // 🚨 H4(docs/10_UIUX_리뷰.md) 수정: 이 세션이 6층을 완성하는 세션인지 미리 안다
+  // (이번 세션이 채울 층은 정확히 getFilled()+1번째). 완주 전인데도 매번 `lines.party`
+  // ("다 모았어!")를 재생하면 그림(진행 중인 층수)과 말이 어긋난다.
+  const willComplete = getFilled() + 1 >= 6;
 
   useEffect(() => {
     // 🚨 speak() 인자는 LINES.* 파생식을 직접 인라인한다(S4) — 중간 변수를 거치면
@@ -44,8 +50,15 @@ export function Reward({ lines, onReplay }: Props) {
     sfx.cheer();
     setLine(lines?.cheer.t ?? LINES.cheer.t);
     speak(lines?.cheer.t ?? LINES.cheer.t, () => {
-      setLine(lines?.party.t ?? LINES.cheer.t);
-      speak(lines?.party.t ?? LINES.cheer.t);
+      // 🚨 S4: 분기별로 speak() 인자를 LINES.* 파생식 그대로 인라인한다 — 중간 변수(삼항식
+      // 결과 등)를 거치면 check-safety-rules.mjs 의 정적 검사가 추적할 수 없다.
+      if (willComplete) {
+        setLine(lines?.party.t ?? LINES.rewardParty.t);
+        speak(lines?.party.t ?? LINES.rewardParty.t);
+      } else {
+        setLine(LINES.layerFilled.t);
+        speak(LINES.layerFilled.t);
+      }
     });
 
     // 무지개떡 한 층 채우기 — mockup:1865-1878. 0.6초 뒤 다음 층이 pop 과 함께 채워진다.
@@ -56,6 +69,11 @@ export function Reward({ lines, onReplay }: Props) {
         if (i === null) return; // 이미 6층 — 이번 세션은 층을 늘리지 않는다
         setJustFilled(i);
         setFilled(i + 1);
+        // 2층·4층(레벨1·레벨2 완주) 강조 연출 — 기획안 §1-2. 6층 완성과는 강도를 다르게 둔다.
+        if (isLevelUp(i)) {
+          setJustLeveledUp(true);
+          sfx.levelUp();
+        }
         if (i + 1 >= 6) {
           // 6층을 다 모았으면 완성 보상으로 넘어간다(순환 재생)
           timers.current.push(
@@ -86,6 +104,7 @@ export function Reward({ lines, onReplay }: Props) {
       <RainbowCake
         filled={filled}
         justFilled={justFilled}
+        levelUp={justLeveledUp}
         coated={rewardKind === 'party' || rewardKind === 'pool'}
         glossy={rewardKind === 'pound'}
       />

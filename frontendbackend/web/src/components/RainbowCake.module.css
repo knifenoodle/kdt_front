@@ -21,6 +21,9 @@
 }
 .fill { opacity: 1; }
 .pop { animation: pop 0.6s ease-out; }
+/* 2층·4층 완성(레벨업) 강조 — 기획안 §1-2 "0.6초 내외 반짝임". 6층 완성 연출(coated/glossy)과는
+   강도를 다르게 둔다 — 레벨업은 "다음이 있다" 신호, 6층 완성만 "끝났다" 신호(§2-5). */
+.levelPop { animation: levelPop 0.65s ease-out; }
 
 .honeyCoat {
   transform-box: fill-box;
@@ -29,6 +32,11 @@
 }
 
 @keyframes pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes levelPop {
+  0% { transform: scale(0.6); filter: drop-shadow(0 0 0 rgb(255 255 255 / 0%)); }
+  55% { transform: scale(1.22); filter: drop-shadow(0 0 6px rgb(255 255 255 / 90%)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgb(255 255 255 / 0%)); }
+}
 @keyframes pourcoat { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
 @media (prefers-reduced-motion: reduce) {

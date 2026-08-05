@@ -39,6 +39,14 @@ export const sfx = {
     tone(659, 130);
     window.setTimeout(() => tone(880, 180), 120);
   },
+  /**
+   * 2층·4층 완성(레벨업) 전용 — 참고자료/레벨시스템 심화기획안 v1.2.md §1-2 확정 스펙:
+   * "기존 SFX 대비 피치만 살짝 높임, 신규 사운드 자산 불필요". cheer를 한 톤 올린 변형이다.
+   */
+  levelUp: () => {
+    tone(784, 130);
+    window.setTimeout(() => tone(1046, 190), 120);
+  },
   reward: () => {
     [523, 659, 784, 1046].forEach((f, i) => window.setTimeout(() => tone(f, 200), i * 130));
   },

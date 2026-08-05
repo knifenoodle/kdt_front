@@ -40,6 +40,13 @@ Emotion = Literal["none", "joy", "sad", "angry", "surprised", "shy", "scared"]
 AdapterName = Literal["template_deck", "derived", "backend_session"]
 FallbackReason = Literal["no_api_key", "empty_scenarios", "upstream_error", "timeout", "invalid_category"]
 
+# ── [UI 요구] 참고자료/레벨시스템 심화기획안 v1.2.md §2-3·§3-1 — 레벨(난이도 축)과
+# 변이(진행 축). 백엔드 Scenario 4카테고리와 무관한 신규 축이며, 저작 데크 선택
+# 키로만 쓰인다("부재 ≠ 충돌", CLAUDE.md §2). 생략하면(None) 기존 레거시 데크
+# (deck/{category}.json)로 동작해 하위호환을 유지한다.
+Level = Literal["1", "2", "3"]
+Variation = Literal["1", "2", "3"]
+
 
 class Strict(BaseModel):
     """extra='forbid' — 아동 식별정보 필드가 스키마에 스며드는 것을 타입 차원에서 막는다."""
@@ -132,6 +139,9 @@ class SessionScript(Strict):
     other: Other
     # mockup-v1.html:1827 + 캐릭터연출_기획_v1.md:653-663 확정. 임의 상향 차단.
     retry_max: Literal[2] = 2
+    # [신설] 레벨시스템 v1.2 §2-3. None = 레거시 데크(레벨/변이 미분화) 사용.
+    level: Optional[Level] = None
+    variation: Optional[Variation] = None
     lines: Lines
     turns: list[Turn] = Field(min_length=3, max_length=3)
     source: Source
@@ -151,3 +161,6 @@ class SessionRequest(Strict):
     category: Category
     age_band: AgeBand = "5"      # 설계 기준 페르소나 (기획서 v4:119)
     scene: Scene = "kids"
+    # [신설] 레벨시스템 v1.2 §2-3. 둘 다 None이면 레거시 데크(deck/{category}.json)를 쓴다.
+    level: Optional[Level] = None
+    variation: Optional[Variation] = None

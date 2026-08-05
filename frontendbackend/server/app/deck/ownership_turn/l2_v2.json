@@ -1,0 +1,140 @@
+{
+  "_source": "신규 저작 — 참고자료/레벨시스템 심화기획안 v1.2.md §3 기준. 레벨2/변이2(말로만).",
+  "_safety_notes": [
+    "turns[*].back_emo 궤적 angry/surprised → sad/none → shy/joy 는 누그러지는 방향만이다.",
+    "레벨2: 1턴에서 고른 표현(\"싫어\")을 3턴 내내 유지해야 하므로 sup2 챈트가 3턴 모두 동일하다.",
+    "변이2 — 상대는 행동 없이 말로만 조른다.",
+    "cheer가 유일한 평가성 발화이며 항상 긍정이다."
+  ],
+  "category": "ownership_turn",
+  "skill": "refuse",
+  "other": "yakgwa",
+  "level": "2",
+  "variation": "2",
+  "lines": {
+    "ai_disclosure": {
+      "who": "songpyeon",
+      "t": "나는 컴퓨터가 만든 친구야. 그래도 같이 연습할 수 있어!"
+    },
+    "intro": {
+      "who": "songpyeon",
+      "t": "약과가 네 지우개를 자꾸 달라고 말로 졸라. 싫으면 싫다고 말해도 돼."
+    },
+    "intro_suffix": "싫으면 싫다고 말해도 돼.",
+    "demo_in": {
+      "who": "songpyeon",
+      "t": "먼저 내가 어떻게 말하는지 보여줄게. 잘 봐."
+    },
+    "demo": [
+      {
+        "who": "yakgwa",
+        "emo": "angry",
+        "t": "딱 한 번만 빌려주면 안 돼?"
+      },
+      {
+        "who": "songpyeon",
+        "t": "싫어. 아까도 싫다고 했잖아."
+      },
+      {
+        "who": "yakgwa",
+        "emo": "sad",
+        "t": "칫… 알았어."
+      }
+    ],
+    "wait": {
+      "who": "songpyeon",
+      "t": "조금만 기다려줘."
+    },
+    "cant": {
+      "who": "songpyeon",
+      "t": "잘 안 들려. 다시 말해줄래?"
+    },
+    "cheer": {
+      "who": "songpyeon",
+      "t": "잘 말했어! 네 마음을 그대로 말했구나."
+    },
+    "party": {
+      "who": "songpyeon",
+      "t": "무지개떡을 다 모았어! 꿀파티다!"
+    }
+  },
+  "turns": [
+    {
+      "emo": "angry",
+      "back_emo": "surprised",
+      "ask": {
+        "who": "yakgwa",
+        "t": "그 지우개 나 주면 안 돼? 지금 줘."
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "\"싫어\" 하고 말해볼까?"
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 짧게 \"싫어\"라고만 해도 돼."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"싫어!\" 해봐."
+      },
+      "back": {
+        "who": "yakgwa",
+        "t": "어? 싫다고…? 칫."
+      }
+    },
+    {
+      "emo": "sad",
+      "back_emo": "none",
+      "ask": {
+        "who": "yakgwa",
+        "t": "그럼 진짜 잠깐만 빌려주면 안 돼?"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "아까 말한 대로 다시 말해도 괜찮아."
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 아까 했던 말 그대로 다시 해도 돼."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"싫어!\" 해봐."
+      },
+      "back": {
+        "who": "yakgwa",
+        "t": "알았어… 안 뺏을게."
+      }
+    },
+    {
+      "emo": "shy",
+      "back_emo": "joy",
+      "ask": {
+        "who": "yakgwa",
+        "t": "그럼 다 쓰고 나서 나도 써도 돼?"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "마음이 그대로면 아까처럼 말해도 돼."
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 아까 했던 그 말 그대로 해도 충분해."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"싫어!\" 해봐."
+      },
+      "back": {
+        "who": "yakgwa",
+        "t": "헤헤, 알았어! 그럼 기다릴게."
+      }
+    }
+  ],
+  "parent_meta_fallback": {
+    "scenario_title": "지우개는 지금 내가 쓸래",
+    "learning_goal": "친구가 계속 말로 조를 때 처음 한 말을 그대로 유지해서 말하기",
+    "conflict_trigger": "약과가 지우개를 계속 말로 달라고 조른다"
+  }
+}

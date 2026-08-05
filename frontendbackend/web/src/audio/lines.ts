@@ -27,9 +27,24 @@ export const LINES = {
   wait: { who: 'songpyeon', t: '조금만 기다려줘.' } as Line,
   /** cantHear — 실패가 아니라 캐릭터의 부탁 (uiux기획/CLAUDE.md:95) */
   cant: { who: 'songpyeon', t: '잘 안 들려. 다시 말해줄래?' } as Line,
+
+  /**
+   * 🚨 H9(docs/10_UIUX_리뷰.md) 수정 — Next.js 기본 오류·404 페이지(영어, 빨강 계열)가
+   * 아이 화면에 그대로 뜨는 경로를 막는다(`app/error.tsx`·`app/not-found.tsx`).
+   * 오류 어휘·오류 색 없이 상황 설명형으로만 쓴다(규칙 6, uiux기획/CLAUDE.md:81).
+   */
+  appHiccup: { who: 'songpyeon', t: '잠깐 멈췄네. 다시 눌러서 만나자!' } as Line,
+  notFound: { who: 'songpyeon', t: '어라, 이 길은 없네. 처음으로 가볼까?' } as Line,
   /** 유일한 평가성 발화이며 항상 긍정이다 (규칙 6) */
   cheer: { who: 'songpyeon', t: '잘 말했어! 네 마음을 그대로 말했구나.' } as Line,
   replay: { who: 'songpyeon', t: '다시 들려줄게.' } as Line,
+
+  /**
+   * 🚨 H4(docs/10_UIUX_리뷰.md) 수정 — 6층이 아직 안 채워졌는데도 매 세션
+   * `lines.party`("무지개떡을 다 모았어!")를 그대로 재생해 그림(1/6)과 말이 어긋났다.
+   * 완주 전 세션은 판정·비교 없는 활동 기록형 문구만 쓴다(§2-4, S12).
+   */
+  layerFilled: { who: 'songpyeon', t: '오늘도 멋지게 해냈어! 무지개떡 한 층을 더 채웠어.' } as Line,
 
   /**
    * 무지개떡 6층 완성 — mockup:1957-1963(`REWARDS`). 순환 재생되는 완성 보상 3종.

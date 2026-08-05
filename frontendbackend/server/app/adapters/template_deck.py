@@ -68,6 +68,19 @@ def load_deck(category: str) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_deck_variant(category: str, level: str, variation: str) -> dict:
+    """레벨시스템 v1.2 §2-3 — 레벨×변이 데크. `deck/{category}/l{level}_v{variation}.json`.
+
+    레거시 `load_deck()`과 별도 경로다. 레거시 파일은 `test_never_fails.py:151`이
+    문자열을 하드코딩 검증하므로 바이트 단위로 건드리지 않는다 — 이 함수가 그 파일을
+    대체하지 않고, level/variation이 둘 다 주어졌을 때만 선택되는 신규 경로다.
+    """
+    path = DECK_DIR / category / f"l{level}_v{variation}.json"
+    if not path.is_file():
+        raise DeckNotFound(f"저작 데크가 없습니다: {path.parent.name}/{path.name}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def _line(raw: dict) -> Line:
     return Line(**{k: v for k, v in raw.items() if k in ("who", "t", "emo")})
 
@@ -76,7 +89,12 @@ class TemplateDeckAdapter(SessionScriptAdapter):
     name = "template_deck"
 
     async def build(self, req: SessionRequest) -> SessionScript:  # type: ignore[override]
-        deck = load_deck(req.category)
+        # 레벨시스템 v1.2 §2-3: level/variation이 둘 다 주어지면 신규 9종 데크,
+        # 아니면 레거시 데크(현행 동작과 100% 동일 — 하위호환).
+        if req.level and req.variation:
+            deck = load_deck_variant(req.category, req.level, req.variation)
+        else:
+            deck = load_deck(req.category)
 
         scenario: Optional[dict] = None
         issues: list[dict] = []
@@ -203,6 +221,8 @@ class TemplateDeckAdapter(SessionScriptAdapter):
             age_band=req.age_band,
             scene=req.scene,
             other=deck["other"],
+            level=req.level,
+            variation=req.variation,
             lines=lines,
             turns=turns,
             source=Source(

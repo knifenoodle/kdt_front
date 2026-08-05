@@ -17,6 +17,10 @@ export type Skill = 'greet' | 'request' | 'apologize' | 'refuse' | 'take_turns';
 export type Scene = 'class' | 'play' | 'kids' | 'cvs' | 'stat' | 'variety' | 'dept' | 'cinema' | 'futsal' | 'dojang';
 export type Who = 'songpyeon' | 'sirutteok' | 'garaetteok' | 'injeolmi' | 'kkultteok' | 'yakgwa' | 'baekseolgi';
 export type Emotion = 'none' | 'joy' | 'sad' | 'angry' | 'surprised' | 'shy' | 'scared';
+/** 참고자료/레벨시스템 심화기획안 v1.2.md §2-3 — 난이도 축(1~3). category와 무관한 UI 신규 축. */
+export type Level = '1' | '2' | '3';
+/** 같은 문서 §2-3 — 진행 축(변이 1~3, 상대 표현 방식). level과 항상 함께 채워지거나 함께 없다. */
+export type Variation = '1' | '2' | '3';
 
 export interface Line {
   who: Who;
@@ -45,6 +49,9 @@ export interface SessionScript {
   partner: 'songpyeon';
   other: Exclude<Who, 'songpyeon'>;
   retry_max: 2;
+  /** null이면 레벨/변이 미분화 레거시 데크가 쓰였다는 뜻이다. */
+  level: Level | null;
+  variation: Variation | null;
   lines: {
     ai_disclosure: Line;
     intro: Line;
@@ -75,6 +82,9 @@ export interface SessionRequest {
   category: Category;
   age_band?: AgeBand;
   scene?: Scene;
+  /** 둘 다 생략하면 레벨/변이 미분화 레거시 데크(deck/{category}.json)를 쓴다. */
+  level?: Level;
+  variation?: Variation;
 }
 
 export async function fetchSession(req: SessionRequest, signal?: AbortSignal): Promise<SessionScript> {

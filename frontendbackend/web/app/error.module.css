@@ -1,0 +1,24 @@
+/* app/error.tsx · app/not-found.tsx 공용 — 오류 색 없이, 아이 화면 톤 그대로 (S3). */
+
+.wrap {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.text {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: center;
+  max-width: 22ch;
+  margin: 0;
+}

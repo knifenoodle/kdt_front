@@ -70,7 +70,8 @@ def test_request_model_has_no_pii_field(field):
 
 def test_age_is_a_band_not_a_number():
     """연령은 '4'|'5'|'6' 밴드다. 정수 나이·생년월일을 받지 않는다."""
-    assert set(SessionRequest.model_fields) == {"category", "age_band", "scene"}
+    # level/variation = 레벨시스템 v1.2 §2-3 신설 필드(둘 다 Optional, PII 아님).
+    assert set(SessionRequest.model_fields) == {"category", "age_band", "scene", "level", "variation"}
 
 
 # ── M2: 카테고리 enum 강제 ───────────────────────────────────────────

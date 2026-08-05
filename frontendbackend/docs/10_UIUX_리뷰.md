@@ -84,7 +84,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
 필요조치 : ask 이펙트에서 hint를 이어서 재생한 뒤 waitForChild로 전이. sup1/sup2는
            retry() 배선까지 포함하면 완전 복구.
 게이트   : G1 (STT·동의와 무관 — 지금 고칠 수 있다)
-상태     : 미착수
+상태     : 완료(2026-08-05) — hint/sup1/sup2 재생 + 무응답 타임아웃 기반 승급 배선(web/src/screens/Talk.tsx)
 ```
 
 ### H2 — "다시 듣기"가 반복이 아니라 건너뛰기다 (실측 확인)
@@ -121,7 +121,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
            의도된 완료와 구분되게 한다. 최소 수정: replay()가 현재 재생 중인
            콜백 체인을 이어가지 않도록 별도 경로로 분리.
 게이트   : G1
-상태     : 미착수 · 적대적 재검증에서 신규 발견(원 계획엔 없었음)
+상태     : 완료(2026-08-05) — speak() 세대 토큰(activeId)으로 교체된 발화의 onEnd 억제(web/src/audio/speak.ts)
 ```
 
 ### H3 — 서버가 만든 상황 설명이 아이에게 도달하지 않는다
@@ -158,7 +158,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
 필요조치 : start()가 참조하는 lines를 prefetch 완료 후의 최신 상태로 바꾸거나,
            intro도 ask처럼 이펙트에서 서버 값이 도착한 뒤 재생하도록 구조 변경.
 게이트   : G1
-상태     : 미착수
+상태     : 완료(2026-08-05) — resolvedRef로 start() 클로저 문제 해결(web/src/screens/Talk.tsx)
 ```
 
 ### H4 — 보상 화면 음성이 그림과 어긋나고, 폴백 시 같은 문장을 두 번 듣는다
@@ -189,7 +189,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
            문구를 신설. 폴백 시 cheer/party를 서로 다른 상수로 분리(현재 party
            폴백이 cheer와 동일한 게 근본 원인).
 게이트   : G1
-상태     : 미착수
+상태     : 완료(2026-08-05) — 완주 전 세션은 LINES.layerFilled 사용, party는 6층 완성 시에만(web/src/screens/Reward.tsx)
 ```
 
 ### H5 — 배경 씬 10종이 전혀 보이지 않는다
@@ -217,7 +217,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
 완화붕괴 : 해당 없음
 필요조치 : .talk에 z-index:0(또는 isolation:isolate) 한 줄 추가로 해결.
 게이트   : G1
-상태     : 미착수 · 내가 만든 회귀
+상태     : 완료(2026-08-05) — .start/.talk에 z-index:0으로 로컬 스태킹 컨텍스트 부여(web/src/screens/Talk.module.css)
 ```
 
 ### H6 — TTS가 `onend`를 쏘지 않으면 세션이 영구 정지한다
@@ -241,7 +241,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
 필요조치 : speak()에 mockup과 동일한 길이 기반 워치독을 speechSynthesis 유무와
            무관하게 항상 무장.
 게이트   : G1
-상태     : 미착수
+상태     : 완료(2026-08-05) — speak()에 워치독 타이머 추가, onend/onerror 무응답 시 강제 진행(web/src/audio/speak.ts)
 ```
 
 ### H7 — 가로 모드 폰에서 주 버튼에 물리적으로 도달할 수 없다
@@ -265,7 +265,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
 필요조치 : mockup의 fit() 패턴(균일 스케일 + 음수 마진) 이식, 또는 세로 방향
            강제 힌트 + 짧은 뷰포트 전용 컴팩트 레이아웃.
 게이트   : G1
-상태     : 미착수
+상태     : 완료(2026-08-05) — 짧은 뷰포트 미디어쿼리로 transform:scale 균일축소(web/src/screens/Talk.module.css)
 ```
 
 ### H8 — 화자를 알 수 없다
@@ -308,7 +308,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
 필요조치 : error.tsx/not-found.tsx를 한국어·오류색 없이(캐릭터 cantHear 상태
            재사용) 작성.
 게이트   : G1
-상태     : 미착수
+상태     : 완료(2026-08-05) — app/error.tsx·app/not-found.tsx 신설, 캐릭터 canthear + 한국어 문구로 대체
 ```
 
 ### H10 — `/__dev`가 프로덕션 빌드에 무인증으로 실려 아이 화면 금지 데이터를 노출한다
@@ -328,7 +328,7 @@ LEGAL/GOV/ETH/GDL 자사 규칙                                      (규제 근
 완화붕괴 : 공개 배포 순간 즉시 노출
 필요조치 : 빌드 플래그로 프로덕션에서 라우트 제외, 또는 기본 인증 추가.
 게이트   : G2-8(공개 배포 시 인증·레이트리밋)에 준하는 신규 항목으로 등재 제안
-상태     : 미착수
+상태     : 완료(2026-08-05) — NODE_ENV==='production'에서 notFound() 호출, 프로덕션 번들에서 라우트 제외 확인(web/app/__dev/page.tsx)
 ```
 
 ---

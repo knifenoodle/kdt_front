@@ -21,9 +21,17 @@ export function fillNextLayer(): number | null {
   return i;
 }
 
-/** "다시 하기" — 6층을 다 채웠으면 다음 라운드를 위해 리셋한다. */
-export function resetIfComplete(): void {
-  if (filled >= 6) filled = 0;
+/**
+ * "다시 하기" — 6층을 다 채웠으면 다음 라운드를 위해 리셋한다.
+ * 반환값은 실제로 리셋이 일어났는가 — 새 라운드 시작 시 레벨당 변이 조합을
+ * 다시 뽑아야 하는 lib/levelPlan.ts 의 트리거로 쓴다(§2-3 "아동마다 다른 조합").
+ */
+export function resetIfComplete(): boolean {
+  if (filled >= 6) {
+    filled = 0;
+    return true;
+  }
+  return false;
 }
 
 /**

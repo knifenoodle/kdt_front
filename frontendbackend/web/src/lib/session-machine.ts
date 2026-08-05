@@ -55,7 +55,14 @@ export type Action =
   | { type: 'RESPOND_DONE' }
   | { type: 'THINKING' }
   | { type: 'ESCALATE' }
-  | { type: 'RESET' };  // 보상 화면의 "다시 하기" — 새 세션을 시작하기 전 초기화
+  | { type: 'RESET' }  // 보상 화면의 "다시 하기" — 새 세션을 시작하기 전 초기화
+  /**
+   * 지원 단계 상승. STT가 없어 "미통과"를 판정할 수 없으므로(D2), 무응답
+   * 시간 초과를 트리거로 쓴다 — 판정이 아니라 "아직 준비가 안 됐구나"의 신호다.
+   * 아이가 먼저 "말했어요"를 탭하면 이 액션이 발화하기 전에 CHILD_SPOKE_OK로
+   * 전이하므로 이 액션 자체가 무의미해진다(retry_max=2, §2-7 확정).
+   */
+  | { type: 'RETRY' };
 
 const TOTAL_TURNS = 3;
 
@@ -108,6 +115,9 @@ export function reduce(s: SessionState, a: Action): SessionState {
 
     case 'RESET':
       return initialState;
+
+    case 'RETRY':
+      return retry(s);
 
     default: {
       const _exhaustive: never = a;

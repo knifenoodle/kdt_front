@@ -1,0 +1,139 @@
+{
+  "_source": "신규 저작 — 참고자료/레벨시스템 심화기획안 v1.2.md §3 기준. 레벨3/변이1(말+행동).",
+  "_safety_notes": [
+    "turns[*].back_emo 궤적 angry/surprised → sad/none → shy/joy 는 누그러지는 방향만이다.",
+    "레벨3: 레벨2와 동일하게 표현(\"안 돼\")을 유지하다가 3턴째에만 대안(\"이따가 같이 하자\")을 덧붙인다.",
+    "cheer가 유일한 평가성 발화이며 항상 긍정이다."
+  ],
+  "category": "ownership_turn",
+  "skill": "refuse",
+  "other": "sirutteok",
+  "level": "3",
+  "variation": "1",
+  "lines": {
+    "ai_disclosure": {
+      "who": "songpyeon",
+      "t": "나는 컴퓨터가 만든 친구야. 그래도 같이 연습할 수 있어!"
+    },
+    "intro": {
+      "who": "songpyeon",
+      "t": "시루떡이 네 발차기 순서를 새치기하려고 앞으로 나서. 싫으면 싫다고 말해도 돼."
+    },
+    "intro_suffix": "싫으면 싫다고 말해도 돼.",
+    "demo_in": {
+      "who": "songpyeon",
+      "t": "먼저 내가 어떻게 말하는지 보여줄게. 잘 봐."
+    },
+    "demo": [
+      {
+        "who": "sirutteok",
+        "emo": "angry",
+        "t": "그거 나 주면 안 돼?"
+      },
+      {
+        "who": "songpyeon",
+        "t": "지금은 싫어. 이따가 같이 하자."
+      },
+      {
+        "who": "sirutteok",
+        "emo": "shy",
+        "t": "오! 좋아. 이따가 보자!"
+      }
+    ],
+    "wait": {
+      "who": "songpyeon",
+      "t": "조금만 기다려줘."
+    },
+    "cant": {
+      "who": "songpyeon",
+      "t": "잘 안 들려. 다시 말해줄래?"
+    },
+    "cheer": {
+      "who": "songpyeon",
+      "t": "잘 말했어! 네 마음을 그대로 말했구나."
+    },
+    "party": {
+      "who": "songpyeon",
+      "t": "무지개떡을 다 모았어! 꿀파티다!"
+    }
+  },
+  "turns": [
+    {
+      "emo": "angry",
+      "back_emo": "surprised",
+      "ask": {
+        "who": "sirutteok",
+        "t": "나 먼저 찰래! 비켜줘!"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "\"안 돼\" 하고 말해볼까?"
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 짧게 \"안 돼\"라고만 해도 돼."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"안 돼!\" 해봐."
+      },
+      "back": {
+        "who": "sirutteok",
+        "t": "어… 안 된다고? 칫."
+      }
+    },
+    {
+      "emo": "sad",
+      "back_emo": "none",
+      "ask": {
+        "who": "sirutteok",
+        "t": "그럼 딱 한 번만 먼저 하면 안 돼?"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "아까 말한 대로 다시 말해도 괜찮아."
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. 아까 했던 말 그대로 다시 해도 돼."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"안 돼!\" 해봐."
+      },
+      "back": {
+        "who": "sirutteok",
+        "t": "알았어… 기다릴게."
+      }
+    },
+    {
+      "emo": "shy",
+      "back_emo": "joy",
+      "ask": {
+        "who": "sirutteok",
+        "t": "그럼 나는 언제 할 수 있어?"
+      },
+      "hint": {
+        "who": "songpyeon",
+        "t": "\"안 돼. 이따가 같이 하자\"라고 말해볼까?"
+      },
+      "sup1": {
+        "who": "songpyeon",
+        "t": "괜찮아. \"안 돼\" 뒤에 \"이따가 같이 하자\"만 붙여도 돼."
+      },
+      "sup2": {
+        "who": "songpyeon",
+        "t": "내가 먼저 말할게. 하나, 둘, 셋 하면 이어서 \"안 돼! 이따가 같이 하자!\" 해봐."
+      },
+      "back": {
+        "who": "sirutteok",
+        "t": "오! 좋아. 이따가 보자!"
+      }
+    }
+  ],
+  "parent_meta_fallback": {
+    "scenario_title": "지금은 내 순서, 이따가 같이 하자",
+    "learning_goal": "거절을 유지하다가 마지막에 대안을 덧붙여 관계를 잇기",
+    "conflict_trigger": "시루떡이 발차기 순서를 새치기하려 한다"
+  }
+}

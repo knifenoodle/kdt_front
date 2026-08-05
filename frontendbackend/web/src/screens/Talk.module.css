@@ -2,6 +2,12 @@
 
 .start, .talk {
   position: relative;
+  /* 🚨 H5(docs/10_UIUX_리뷰.md) 수정: z-index 없는 position:relative 는 새 스태킹
+     컨텍스트를 만들지 않는다. 그러면 Scene 의 z-index:-1(Scene.module.css) 이 이
+     엘리먼트 안이 아니라 페이지 루트 기준으로 적용돼, 바로 아래 이 배경(.talk 자체의
+     background)보다도 뒤로 밀려 전혀 보이지 않았다. z-index:0 으로 로컬 스태킹
+     컨텍스트를 만들어 Scene 이 이 배경 위·형제 위(캐릭터·말풍선)의 아래에만 오도록 한다. */
+  z-index: 0;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -48,4 +54,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/**
+ * 🚨 H7(docs/10_UIUX_리뷰.md) 수정 — 가로 모드 폰(예: 844×390)에서는 캐릭터·간격·
+ * 버튼의 실제 필요 높이가 뷰포트보다 커서 주 버튼("시작하기"/"말하기")이 화면 밖으로
+ * 밀려나 규칙 1(주 행동 도달 가능)을 어겼다. `overflow:hidden` 때문에 스크롤로 만회할
+ * 수도 없었다(규칙 8). mockup 의 fit() 균일축소 취지를 CSS `transform: scale()` 로
+ * 재현한다 — 로직을 건드리지 않고 짧은 뷰포트에서만 전체를 축소해 항상 버튼에
+ * 손이 닿게 한다. `.start`/`.talk` 배경이 body 배경과 같은 토큰이라 축소로 드러나는
+ * 여백이 이질감 없이 이어진다.
+ */
+@media (max-height: 500px) {
+  .start, .talk {
+    /* min-height 만으로는 내용이 뷰포트보다 크면 박스 자체가 그만큼 늘어나
+       transform-origin 이 뷰포트 중심과 어긋난다 — height 로 고정해 축소 중심을
+       실제 화면 중심과 맞춘다. */
+    height: 100dvh;
+    min-height: 0;
+    transform: scale(0.5);
+  }
 }

@@ -15,13 +15,15 @@ interface Props {
   filled: number;
   /** 방금 채워진 층 인덱스 — pop 연출 대상 */
   justFilled?: number | null;
+  /** justFilled가 2층·4층(레벨업)인가 — 강조 연출(levelPop) 대상(기획안 §1-2) */
+  levelUp?: boolean;
   /** 6층 완성 — 꿀 코팅 (꿀파티·꿀수영장) */
   coated?: boolean;
   /** 6층 완성 — 광택 (떡메치기. 코팅과 동시에 쓰지 않는다) */
   glossy?: boolean;
 }
 
-export function RainbowCake({ filled, justFilled, coated, glossy }: Props) {
+export function RainbowCake({ filled, justFilled, coated, glossy, levelUp }: Props) {
   return (
     <div className={[styles.cake, glossy ? styles.glossy : ''].filter(Boolean).join(' ')} aria-hidden>
       <svg viewBox="0 0 240 240">
@@ -38,7 +40,7 @@ export function RainbowCake({ filled, justFilled, coated, glossy }: Props) {
             className={[
               styles.layer,
               i < filled ? styles.fill : '',
-              i === justFilled ? styles.pop : '',
+              i === justFilled ? (levelUp ? styles.levelPop : styles.pop) : '',
             ].filter(Boolean).join(' ')}
           />
         ))}
