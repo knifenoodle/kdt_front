@@ -7,7 +7,7 @@
 | D1 | 연령 타깃 = 만 4~6세 (페르소나 5세) | `compliance/DECISIONS.md` §D1 |
 | D2 | 1단계 범위 = 분석 + 수직 슬라이스, STT 제외 | 〃 §D2 |
 | D3 | 프런트 스택 = Next.js 15 App Router + CSS Modules | 〃 §D3 |
-| D4 | 원본 수정 = 안전 결함 2건만, 사본 + 기록 필수 | 〃 §D4, `compliance/upstream-patches/CHANGELOG.md` |
+| D4 | **원본 무수정.** `engine/` 사본에서 작업 (2026-08-05 개정) | 〃 §D4, `compliance/engine-fork/FORK-LOG.md` |
 | D5 | 부모 리포트 = 지수 유지 (조건부), 축소안 병기 | 〃 §D5 |
 | D6 | 우선순위 규칙 안전 예외 | 〃 §D6, `CLAUDE.md` §3-2 |
 | D7 | 연출 3건 이미 결정됨 — 재논의 금지 | 〃 §D7, `docs/02` §C |

@@ -349,6 +349,31 @@ const CHILD_UI_AND_LINES = [...CHILD_UI, ...ALL.filter((f) => f.endsWith('/audio
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// S-route  Next.js App Router 의 '_' 프리픽스 private-folder 함정을 잡는다
+//     `app/__dev` 처럼 폴더명이 '_' 로 시작하면 Next.js 가 라우팅에서
+//     통째로 제외한다(private folder 컨벤션) — 빌드는 성공하고 오류도 없이
+//     그 라우트만 조용히 404 가 된다. 실제로 이 프로젝트에서 발생했었다.
+//     이스케이프는 '%5F'(밑줄의 URL 인코딩) 로 폴더명을 시작해야 한다.
+// ═══════════════════════════════════════════════════════════════════
+{
+  const appDir = join(ROOT, 'app');
+  let hit = false;
+  for (const entry of readdirSync(appDir)) {
+    const full = join(appDir, entry);
+    if (!statSync(full).isDirectory()) continue;
+    if (entry.startsWith('_') && !entry.startsWith('%5F')) {
+      fail(
+        'S-route',
+        `app/${entry} — '_' 로 시작하는 폴더는 Next.js 가 라우팅에서 제외한다(항상 404). ` +
+        `URL 에 밑줄을 남기려면 'app/%5F${entry.slice(1)}' 로 이름을 바꾼다.`,
+      );
+      hit = true;
+    }
+  }
+  if (!hit) pass('S-route', "App Router 라우팅에서 제외되는 '_' 프리픽스 폴더 0건");
+}
+
+// ═══════════════════════════════════════════════════════════════════
 console.log('\n  안전 불변식 검사 (web)\n');
 for (const p of passes) console.log(`  ✅ ${p}`);
 if (failures.length) {
