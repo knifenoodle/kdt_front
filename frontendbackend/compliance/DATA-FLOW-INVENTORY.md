@@ -25,7 +25,7 @@
 
 `name` · `nickname` · `birthdate` · `birth_year` · `child_id` · `school` · `grade` · `gender` · `phone` · `email` · `address` · 정수 나이
 
-근거: `uiux기획/CLAUDE.md:107` — "아이 온보딩에서 이름·생년월일을 받지 않는다. 필요한 건 연령대(4/5/6세)뿐."
+근거: `프론트/CLAUDE.md:107` — "아이 온보딩에서 이름·생년월일을 받지 않는다. 필요한 건 연령대(4/5/6세)뿐."
 강제: `server/app/schemas.py` `SessionRequest`가 `extra='forbid'`. 주입 시 **422 거부**(실측 4/4).
 회귀 방지: `server/tests/test_contract.py::test_request_rejects_pii_fields` (12개 필드 파라미터화)
 
@@ -80,7 +80,7 @@
 
 ## 보관 정책 (D2 기준)
 
-**오해 정정**: `uiux기획/CLAUDE.md:110`(즉시 파기)과 `LEGAL-003-R4`(보관기간 명시)는 **충돌이 아니다.**
+**오해 정정**: `프론트/CLAUDE.md:110`(즉시 파기)과 `LEGAL-003-R4`(보관기간 명시)는 **충돌이 아니다.**
 R4는 *"보관한다면* 기간을 명시하고 열람·정정·삭제 절차를 마련하라"는 **조건부 규칙**이며,
 즉시 파기는 **"보관기간 = 0초"로 명시함으로써 R4를 만족**한다.
 

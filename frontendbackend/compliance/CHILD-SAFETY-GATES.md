@@ -33,7 +33,7 @@
 | # | 항목 | 근거 | 조치 결과 |
 |---|---|---|---|
 | **G1-1** | **CS-004** PIPA 근거 문서 1행 손상 | `LEGAL-003_…md:1` | 난타 문자열 2행 삭제. 10개 문서 전부 frontmatter 파싱 성공(S13). `upstream-patches/` 사본 보관 |
-| **G1-2** | **D1** 연령 타깃 통일 | `prompt_config.json:2` vs `uiux기획/CLAUDE.md:3` | 벤더링 사본으로 만 4~6세 적용. 가드 테스트가 회귀 감시. **잔존: `GDL-001` 본문은 아직 7~9세 기준 → Phase 2** |
+| **G1-2** | **D1** 연령 타깃 통일 | `prompt_config.json:2` vs `프론트/CLAUDE.md:3` | 벤더링 사본으로 만 4~6세 적용. 가드 테스트가 회귀 감시. **잔존: `GDL-001` 본문은 아직 7~9세 기준 → Phase 2** |
 | **G1-3** | **CS-003** draft/validator 비대칭 | `rules_index.json:97,109` + `validator.py:14` | ETH-002·GDL-001 `active` 승격. `ETH-002-R1/R4/R5/R6`·`GDL-001-R1~R5`가 프롬프트에 도달 확인 |
 | **G1-4** | **CS-001** 서버 문자열 → TTS 무검증 도달 | `validator.py:11-15` | `sanitizeForChild()` 관문 신설 + `speak()` 정의부 이중 방어 + S4 기계 검사 |
 | **G1-10** | **CS-005** `category`/`age_range` 무검증 → `system_instruction` 진입 | `main.py:40-43`, `:58` | BFF에서 4값 `Literal` 강제. `age_band`는 서버 정의 라벨로만 번역. 실측: `bogus` → 422 |
@@ -71,7 +71,7 @@
 | G2-2 | 처리방침 + 국외이전 고지 | `GOV-002-R1`, `GOV-001:21` | 아동 음성이 국외 STT로 전송 시 | `PRIVACY-POLICY-DRAFT.md` |
 | G2-3 | STT/TTS 벤더 위탁 계약 명시 | `GOV-002-R2` | 동일 | `DATA-FLOW-INVENTORY.md` |
 | G2-4 | 보관기간·열람·정정·삭제 + 보호자 인증 | `LEGAL-003-R3,R4`, `GOV-002-R4` | 리포트 공개 시 | `RETENTION-DELETION.md` |
-| G2-5 | ParentGate 실물(두 자리 덧셈 4지선다) | `uiux기획/CLAUDE.md:100` | 게이트 뒤 항목 1개라도 구현 시 | — |
+| G2-5 | ParentGate 실물(두 자리 덧셈 4지선다) | `프론트/CLAUDE.md:100` | 게이트 뒤 항목 1개라도 구현 시 | — |
 | G2-6 | 블랙리스트 → 실사용 분류기 | `RULE_ENGINE_README.md:89` 자기 인정 | 아동 자유 발화 시 | `RISK-ESCALATION-POLICY.md` |
 | G2-7 | 사람 검토 큐 (현재 자동 재시도만) | `ETH-001-R4` | 콘텐츠가 사전 검수 없이 도달 시 | `HUMAN-REVIEW-LOG.md` |
 | G2-8 | 인증·레이트리밋·CORS 화이트리스트 | `main.py:63-70` | 공개 배포 시 | — |

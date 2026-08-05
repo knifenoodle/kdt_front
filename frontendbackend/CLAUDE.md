@@ -1,13 +1,13 @@
-# KDT 해커톤 통합 프로젝트 (CLAUDE.md)
+# kdt_front 통합 프로젝트 (CLAUDE.md)
 
 ## 1. 역할 및 실행 환경
 - 역할: 수석 풀스택 개발자 겸 아동 서비스 규제·안전 담당 AI
-- 실행 위치: `/Users/wonwoo_mac/Desktop/KDT 해커톤/frontendbackend`
+- 실행 위치: `/Users/wonwoo_mac/Desktop/kdt_front/frontendbackend`
 
 ## 2. 참조 소스 절대경로
-- 백엔드 소스 절대경로: `/Users/wonwoo_mac/Desktop/KDT 해커톤/백엔드`
-- UI/UX 소스 절대경로: `/Users/wonwoo_mac/Desktop/KDT 해커톤/uiux기획`
-- **작업 방식:** 위 절대경로의 파일들을 읽어서 참고하고, 생성되는 모든 통합 코드와 결과물은 현재 폴더(`/Users/wonwoo_mac/Desktop/KDT 해커톤/frontendbackend`) 내에만 저장할 것.
+- 백엔드 소스 절대경로: `/Users/wonwoo_mac/Desktop/kdt_front/백엔드`
+- UI/UX 소스 절대경로: `/Users/wonwoo_mac/Desktop/kdt_front/프론트`
+- **작업 방식:** 위 절대경로의 파일들을 읽어서 참고하고, 생성되는 모든 통합 코드와 결과물은 현재 폴더(`/Users/wonwoo_mac/Desktop/kdt_front/frontendbackend`) 내에만 저장할 것.
 - **🚨 원본 무수정 원칙 (2026-08-05 확정):** 원본 두 폴더는 **한 바이트도 수정하지 않는다.** 규칙 엔진이 필요하면 `engine/`(원본 `Communication_simulator` 의 사본, 포크 기준 `bdd1bc7`)에서 작업한다. 포크 기록은 `compliance/engine-fork/FORK-LOG.md`.
   - 회귀 방지: `server/tests/test_guards.py::test_upstream_repo_is_untouched` 가 원본 저장소의 `git status --porcelain` 이 비어 있는지 검사한다.
   - 단, **API 계약(카테고리 4키·라벨 문자열)은 engine/ 이 우리 것이 되어도 백엔드 절대 기준을 유지**한다 — `test_backend_contract_keys_match_upstream` 이 감시.
@@ -16,9 +16,9 @@
 1. **백엔드-UI/UX 연동 최우선:** 분리 개발된 백엔드와 UI/UX를 완벽 연동하는 것이 1순위 목표.
 2. **백엔드 우선순위 (Rule of Priority):** 기획/UI/UX와 백엔드 로직/데이터 구조가 충돌할 경우, **백엔드 코드 및 데이터 구조를 절대적 기준**으로 삼을 것.
    - **적용 범위:** 데이터 구조·API 계약·필드명·enum 값·수치 범위. 이 영역에서는 예외 없이 백엔드를 따르며 리네이밍하지 않는다.
-   - **🚨 안전 예외:** **아동 안전·연출·아동에게 노출되는 문구**는 `uiux기획` 문서 위계(`uiux기획/CLAUDE.md` > `캐릭터_가이드_v1.md` > `캐릭터연출_기획_v1.md`)가 백엔드보다 우선한다. 아동 안전 축에서는 UI 산출물이 더 엄격하게 검증된 쪽이므로, 이 예외 없이 규칙을 문면대로 적용하면 모든 안전 충돌이 약한 쪽 승리로 판정된다.
+   - **🚨 안전 예외:** **아동 안전·연출·아동에게 노출되는 문구**는 `프론트` 문서 위계(`프론트/CLAUDE.md` > `캐릭터_가이드_v1.md` > `캐릭터연출_기획_v1.md`)가 백엔드보다 우선한다. 아동 안전 축에서는 UI 산출물이 더 엄격하게 검증된 쪽이므로, 이 예외 없이 규칙을 문면대로 적용하면 모든 안전 충돌이 약한 쪽 승리로 판정된다.
    - **부재 ≠ 충돌:** 백엔드에 해당 개념 자체가 없을 때(예: 3턴 대화 트리)는 이 규칙의 판정 대상이 아니다. 신설 구조는 "백엔드가 나중에 그 필드를 갖게 되면 어댑터만 삭제하면 되는" 형태(snake_case, 백엔드 enum 그대로, Pydantic 표현 가능)로 설계한다.
-3. **시각적 에셋 활용:** 캐릭터, 효과, UI 에셋은 `/Users/wonwoo_mac/Desktop/KDT 해커톤/uiux기획` 폴더 내 리소스를 현재 프로젝트로 가져와 적용할 것.
+3. **시각적 에셋 활용:** 캐릭터, 효과, UI 에셋은 `/Users/wonwoo_mac/Desktop/kdt_front/프론트` 폴더 내 리소스를 현재 프로젝트로 가져와 적용할 것.
 
 ## 4. 🚨 아동 대상 서비스 특수 지침 (규제 및 안전 감지)
 아동 대상 서비스이므로 아래 리스크 발견 시 즉시 `[🚨 아동 규제/안전 리스크 감지]` 태그와 함께 보고할 것:
