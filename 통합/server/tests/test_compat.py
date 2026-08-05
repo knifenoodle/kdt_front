@@ -20,9 +20,19 @@ from pathlib import Path
 
 import pytest
 
-UPSTREAM = Path(
-    "/Users/wonwoo_mac/Desktop/KDT 해커톤/백엔드/Communication_simulator"
-)
+from server.app import deps
+
+# 🚨 test_guards.py 의 UPSTREAM_ROOT 와 반드시 같은 방식으로 구한다. 이전에는
+# 이 파일만 특정 개발자의 Desktop 절대경로를 하드코딩하고 있었다 — 다른 사람이
+# 클론해서 pytest 를 돌리면 100% 실패하는 이식성 결함이었다(그 사람의 홈 디렉터리에는
+# 해당 경로가 존재하지 않는다). deps.PROJECT_ROOT 기준 상대 경로로 통일한다.
+#
+# ⚠️ 모노레포로 클론한 경우(백엔드/통합/프론트 가 한 git 저장소 안에 있는 경우)
+# 이 상대 경로가 그 저장소 안의 "백엔드/" 사본을 가리킬 수 있다. 그 사본은 별도
+# git 저장소가 아니라서 git status 가 저장소 전체를 보고한다 — 이 파일들의
+# 검사 대상이 아니다(원 개발자의 로컬 워크플로용). "통합/" 폴더만 남기고
+# 클론한 경우(가장 흔한 사용 형태)에는 이 경로가 존재하지 않아 아래 skip 이 정상 작동한다.
+UPSTREAM = deps.PROJECT_ROOT.parent / "백엔드" / "Communication_simulator"
 
 pytestmark = pytest.mark.skipif(
     not (UPSTREAM / "rule_engine" / "rule_engine.py").is_file(),
@@ -55,8 +65,11 @@ def upstream_engine():
 
 def test_upstream_is_pristine():
     """전제 확인 — 원본이 수정되지 않은 상태여야 이 테스트가 의미 있다."""
+    # "-- ." : 모노레포 클론(백엔드/통합/프론트가 한 저장소 안에 있는 경우)에서
+    # 저장소 전체가 아니라 이 폴더로만 스코프를 제한한다.
     r = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=UPSTREAM, capture_output=True, text=True
+        ["git", "status", "--porcelain", "--", "."],
+        cwd=UPSTREAM, capture_output=True, text=True,
     )
     assert r.stdout.strip() == "", f"원본이 수정되어 있습니다:\n{r.stdout}"
 

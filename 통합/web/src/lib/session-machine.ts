@@ -54,7 +54,8 @@ export type Action =
   | { type: 'CHILD_SPOKE_UNCLEAR' }  // 인식 실패 — 실패가 아니라 캐릭터의 부탁
   | { type: 'RESPOND_DONE' }
   | { type: 'THINKING' }
-  | { type: 'ESCALATE' };
+  | { type: 'ESCALATE' }
+  | { type: 'RESET' };  // 보상 화면의 "다시 하기" — 새 세션을 시작하기 전 초기화
 
 const TOTAL_TURNS = 3;
 
@@ -104,6 +105,9 @@ export function reduce(s: SessionState, a: Action): SessionState {
     case 'ESCALATE':
       // 일반 롤플레잉에서 도달하지 않는다. 위험 발화 감지 시에만.
       return { ...s, phase: 'escalated', charState: 'idle', done: true };
+
+    case 'RESET':
+      return initialState;
 
     default: {
       const _exhaustive: never = a;

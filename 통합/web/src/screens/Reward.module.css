@@ -1,0 +1,23 @@
+/* 아이 화면: 스크롤 없음, 한 화면 한 행동 (uiux기획/CLAUDE.md:54). Talk.module.css 와 동일 규칙. */
+
+.reward {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  overflow: hidden;
+  background: var(--bg);
+  text-align: center;
+}
+
+.line {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: 22ch;
+  margin: 0;
+}

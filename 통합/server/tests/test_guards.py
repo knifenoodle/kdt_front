@@ -34,7 +34,9 @@ def test_upstream_repo_is_untouched():
     이 테스트가 실패하면 누군가 원본을 직접 고친 것이다.
     """
     r = subprocess.run(
-        ["git", "status", "--porcelain"],
+        # "-- ." : 모노레포 클론(백엔드/통합/프론트가 한 저장소 안에 있는 경우)에서
+        # 저장소 전체가 아니라 이 폴더로만 스코프를 제한한다.
+        ["git", "status", "--porcelain", "--", "."],
         cwd=UPSTREAM_ROOT, capture_output=True, text=True,
     )
     assert r.returncode == 0, f"git 실행 실패: {r.stderr}"
