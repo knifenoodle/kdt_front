@@ -14,12 +14,26 @@ BFF 가 계속 담당하는 것은 **HTTP 계층**이다: CORS·enum 검증·오
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
 BFF_ROOT = Path(__file__).resolve().parent.parent      # frontendbackend/server
 PROJECT_ROOT = BFF_ROOT.parent                          # frontendbackend
-ENGINE_ROOT = PROJECT_ROOT / "engine"
+
+# ── 엔진 트리 선택 ──────────────────────────────────────────────────
+# 기본값은 우리 사본(engine/). 환경변수로 **팀원의 체크아웃을 그대로 가리킬 수 있다.**
+#
+#   TTORANG_ENGINE="/path/to/Communication_simulator" \
+#     ./.venv/bin/uvicorn server.app.main:app --port 8100
+#
+# 왜 필요한가: 백엔드 담당자가 자기 저장소를 계속 발전시키는 동안, 프런트가 그 구조에서
+# 실제로 도는지 매번 확인해야 한다. 사본에서만 검증하면 "우리 포크에서만 되는" 상태가 된다.
+#
+# 원본(수정 전)에서도 세션이 완성되는 것을 확인했다 — 활성 규칙이 7건(사본 9건)으로
+# 달라질 뿐 계약은 동일하다. `tests/test_compat.py` 가 이를 고정한다.
+_ENV_ENGINE = os.environ.get("TTORANG_ENGINE")
+ENGINE_ROOT = Path(_ENV_ENGINE).expanduser().resolve() if _ENV_ENGINE else PROJECT_ROOT / "engine"
 
 _initialized = False
 _init_error: str | None = None
@@ -60,6 +74,9 @@ def diagnostics() -> dict:
     info: dict = {
         "engine_found": engine_available(),
         "engine_root": str(ENGINE_ROOT),
+        # 어느 엔진에 붙어 있는지 화면에서 바로 보이게 한다 —
+        # 시연 중 "우리 사본인가 팀원 원본인가"를 헷갈리지 않기 위해서다.
+        "engine_source": "env:TTORANG_ENGINE" if _ENV_ENGINE else "bundled:engine/",
         "gemini_key_present": bool(os.environ.get("GEMINI_API_KEY")),
         "init_error": _init_error,
     }

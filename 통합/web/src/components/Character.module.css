@@ -20,6 +20,17 @@
 
 .character :global(.eyes) { animation: blink 5.2s infinite; transform-box: fill-box; transform-origin: center; }
 
+/* 🚨 눈 크기 변환의 **적용부**. 이게 없으면 아래의 모든 --eye-sx/--eye-sy 설정이
+   조용히 무시된다 (실제로 빠뜨려서 감정·상태별 눈 변화가 전부 무효였다).
+   눈꺼풀을 별도 도형으로 얹지 않고 transform-origin 을 옮겨 같은 도형으로 표현한다. */
+.character :global(.eye) {
+  transform-box: fill-box;
+  transform-origin: center;
+  --eye-sx: 1; --eye-sy: 1; --eye-tx: 0px; --eye-ty: 0px;
+  transform: translate(var(--eye-tx), var(--eye-ty)) scale(var(--eye-sx), var(--eye-sy));
+  transition: transform var(--dur-normal) ease-out;
+}
+
 /* listening: 몸이 살짝 기울고 눈이 커진다 */
 .character[data-state='listening'] { transform: rotate(-5deg); }
 .character[data-state='listening'] :global(.eye) { --eye-sx: 1.25; --eye-sy: 1.25; }
@@ -44,6 +55,14 @@
 
 /* 눈썹은 화남에만. 떡에는 눈썹이 없는 게 자연스럽고 나머지 감정은 눈·입·부속으로 읽힌다.
    🚨 뿔·김(스팀)·혈관·붉은 얼굴을 쓰지 않는다(캐릭터_가이드_v1.md:317-320) */
+
+/* 🚨 회전의 기준점. 이게 없으면 rotate 가 SVG 사용자 좌표계 원점(0,0) 기준으로 일어나
+   눈썹이 캐릭터 몸 밖으로 날아간다 (실제로 시루떡 오른쪽 눈썹이 우상단으로 튀었다). */
+.character :global(.brow) {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--dur-normal) ease-out;
+}
 .character[data-emo='angry'] :global(.brows) { display: block; }
 .character[data-emo='angry'] :global(.bl) { transform: translateY(6px) rotate(17deg); }
 .character[data-emo='angry'] :global(.br) { transform: translateY(6px) rotate(-17deg); }
@@ -78,6 +97,7 @@
 .character[data-emo='joy'] :global(.blush),
 .character[data-emo='shy'] :global(.blush) { display: block; }
 .character[data-emo='shy'] :global(.blush ellipse) { opacity: 0.9; }
+.character :global(.tear), .character :global(.sweat) { transform-box: fill-box; }
 .character[data-emo='sad'] :global(.tear) { display: block; animation: teardrop 2.6s ease-in infinite; }
 .character[data-emo='scared'] :global(.sweat) { display: block; animation: teardrop 3s ease-in infinite; }
 .character[data-emo='joy'] :global(.spark) { display: block; animation: twinkle 1.7s ease-in-out infinite; }
