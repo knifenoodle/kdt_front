@@ -183,7 +183,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 120,
-          "description": "발화 텍스트(한국어 반말 구어체). maxLength 120은 GDL-001-R1(문장 15단어 내외)의 기계적 상한 근사이며, sanitizeForChild()의 길이 상한과 일치시킨다. 아이는 글자를 못 읽으므로 이 텍스트의 1차 용도는 TTS이고 화면 표시는 보조 레이어다(uiux기획/CLAUDE.md:47-48 규칙 4)."
+          "description": "발화 텍스트(한국어 반말 구어체). maxLength 120은 GDL-001-R1(만 4~6세: 1~2문장, 문장당 10단어 내외)의 기계적 상한 근사이며, sanitizeForChild()의 길이 상한과 일치시킨다. 아이는 글자를 못 읽으므로 이 텍스트의 1차 용도는 TTS이고 화면 표시는 보조 레이어다(uiux기획/CLAUDE.md:47-48 규칙 4)."
         },
         "emo": {
           "anyOf": [{ "$ref": "#/$defs/emotion" }, { "type": "null" }],

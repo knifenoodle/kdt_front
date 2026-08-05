@@ -16,7 +16,8 @@
 
 import { scanRisk, type RiskHit } from './riskPatterns';
 
-/** schemas.py Line.t 의 max_length 및 session-script.schema.json 과 반드시 일치. */
+/** schemas.py Line.t 의 max_length 및 session-script.schema.json 과 반드시 일치.
+ * 근거: GDL-001-R1 (만 4~6세: 1~2문장, 문장당 10단어 내외) */
 export const LINE_MAX = 120;
 
 export interface SanitizeResult {

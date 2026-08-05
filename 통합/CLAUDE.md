@@ -8,7 +8,9 @@
 - 백엔드 소스 절대경로: `/Users/wonwoo_mac/Desktop/KDT 해커톤/백엔드`
 - UI/UX 소스 절대경로: `/Users/wonwoo_mac/Desktop/KDT 해커톤/uiux기획`
 - **작업 방식:** 위 절대경로의 파일들을 읽어서 참고하고, 생성되는 모든 통합 코드와 결과물은 현재 폴더(`/Users/wonwoo_mac/Desktop/KDT 해커톤/frontendbackend`) 내에만 저장할 것.
-- **원본 소스 수정 예외:** 원본은 읽기 전용이 원칙이다. 단 아동 안전·규제 결함이 원본 파일 자체에 있는 경우에 한해, ① `compliance/upstream-patches/`에 수정 전 사본을 먼저 저장하고 ② `upstream-patches/CHANGELOG.md`에 변경 내용을 기록한 뒤 수정할 수 있다. 현재 승인된 예외는 2건(CS-003, CS-004)이며 추가 예외는 매번 별도 승인이 필요하다.
+- **🚨 원본 무수정 원칙 (2026-08-05 확정):** 원본 두 폴더는 **한 바이트도 수정하지 않는다.** 규칙 엔진이 필요하면 `engine/`(원본 `Communication_simulator` 의 사본, 포크 기준 `bdd1bc7`)에서 작업한다. 포크 기록은 `compliance/engine-fork/FORK-LOG.md`.
+  - 회귀 방지: `server/tests/test_guards.py::test_upstream_repo_is_untouched` 가 원본 저장소의 `git status --porcelain` 이 비어 있는지 검사한다.
+  - 단, **API 계약(카테고리 4키·라벨 문자열)은 engine/ 이 우리 것이 되어도 백엔드 절대 기준을 유지**한다 — `test_backend_contract_keys_match_upstream` 이 감시.
 
 ## 3. 개발 및 연동 원칙
 1. **백엔드-UI/UX 연동 최우선:** 분리 개발된 백엔드와 UI/UX를 완벽 연동하는 것이 1순위 목표.

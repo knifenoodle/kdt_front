@@ -57,7 +57,7 @@ class Line(Strict):
     """
 
     who: Who
-    # maxLength 120 = GDL-001-R1(문장 15단어 내외)의 기계적 상한 근사.
+    # maxLength 120 = GDL-001-R1(만 4~6세: 1~2문장, 문장당 10단어 내외)의 기계적 상한 근사.
     t: str = Field(min_length=1, max_length=120)
     emo: Optional[Emotion] = None
 

@@ -1,6 +1,6 @@
 """또랑 BFF.
 
-원본 `백엔드/Communication_simulator` 를 읽기 전용으로 in-process import 하고,
+`engine/` (우리가 관리하는 규칙 엔진) 을 in-process import 하고,
 HTTP 계층 전체(CORS·검증·오류 정규화·헬스체크·타임아웃)를 여기서 담당한다.
 
 실행:
@@ -40,19 +40,19 @@ log = logging.getLogger("ttorang.bff")
 _init_failed: str | None = None
 try:
     deps.init()
-except deps.UpstreamNotFound as exc:
+except deps.EngineNotFound as exc:
     _init_failed = str(exc)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     if _init_failed:
-        log.error("원본 트리 초기화 실패: %s", _init_failed)
+        log.error("engine/ 초기화 실패: %s", _init_failed)
     else:
         d = deps.diagnostics()
         log.info(
-            "원본 트리 연결 OK · 활성 규칙 %s건 · 리트리버 후보 %s · top_k %s · 탈락 %s · Gemini 키 %s",
-            d.get("rules_loaded"), d.get("retriever_pool"), d.get("top_k"),
+            "engine/ 연결 OK · 활성 규칙 %s건 · 리트리버 후보 %s · 선택 %s · 탈락 %s · Gemini 키 %s",
+            d.get("rules_loaded"), d.get("retriever_pool"), d.get("rules_selected"),
             d.get("rules_dropped_by_top_k"),
             "있음" if d.get("gemini_key_present") else "없음",
         )
@@ -98,7 +98,7 @@ def health() -> JSONResponse:
     """🚨 키의 값·앞자리·길이를 절대 반환하지 않는다. 존재 여부 boolean 만."""
     d = deps.diagnostics()
     body = {
-        "ok": bool(d.get("source_tree_found")) and _init_failed is None,
+        "ok": bool(d.get("engine_found")) and _init_failed is None,
         "adapter": _adapter.name,
         "implemented_categories": sorted(IMPLEMENTED_CATEGORIES),
         **d,
@@ -133,7 +133,7 @@ async def session(req: SessionRequest) -> SessionScript:
     아이 화면은 백엔드 실패를 인지할 수 없어야 한다 — 1단계 합격선이다.
 
     예외 2가지(아이가 도달하지 않는 경로):
-      - 원본 트리 미발견 → 503 (개발 환경 구성 오류)
+      - engine/ 미발견 → 503 (개발 환경 구성 오류)
       - 미구현 카테고리 → 501. 다른 카테고리 내용을 조용히 내보내지 않는다
     """
     if _init_failed:

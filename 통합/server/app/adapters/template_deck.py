@@ -51,7 +51,7 @@ AGE_RANGE_LABEL = {
 }
 
 # 아이가 듣는 한 발화의 길이 상한. schemas.Line.t 의 max_length 와 반드시 일치시킨다.
-# 근거: GDL-001-R1 (문장 15단어 내외) 의 기계적 상한 근사.
+# 근거: GDL-001-R1 (만 4~6세: 1~2문장, 문장당 10단어 내외) 의 기계적 상한 근사.
 LINE_MAX = 120
 
 UPSTREAM_TIMEOUT_SEC = 20.0
@@ -106,9 +106,9 @@ class TemplateDeckAdapter(SessionScriptAdapter):
 
     # ── 상류 호출 ────────────────────────────────────────────────────
     async def _call_upstream(self, req: SessionRequest) -> tuple[Optional[dict], list[dict]]:
-        """원본 generate_scenarios 를 스레드에서 호출한다.
+        """engine 의 generate_scenarios 를 스레드에서 호출한다.
 
-        원본은 sync def 이고 Gemini 호출이 블로킹이며 타임아웃이 없다(최대 2회 호출).
+        엔진 함수는 sync def 이고 Gemini 호출이 블로킹이며 타임아웃이 없다(최대 2회 호출).
         to_thread + wait_for 로 이벤트 루프를 막지 않고 상한을 씌운다(M5).
         """
         from rule_engine.scenario_generator import generate_scenarios
@@ -123,7 +123,7 @@ class TemplateDeckAdapter(SessionScriptAdapter):
         result = await asyncio.wait_for(asyncio.to_thread(_run), timeout=UPSTREAM_TIMEOUT_SEC)
 
         scenarios = result.get("scenarios") or []
-        # [백엔드 실측] main.py:77-82 와 동일하게 is_valid=False 리포트의 issue 만 모은다.
+        # [엔진 실측] webapp/main.py:77-82 와 동일하게 is_valid=False 리포트의 issue 만 모은다.
         issues = [
             {"rule_id": i.rule_id, "field": i.field, "message": i.message, "severity": i.severity}
             for report in result.get("validation_reports", [])

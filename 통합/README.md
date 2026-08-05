@@ -36,11 +36,13 @@ Next.js `rewrites`가 `/api/*` → `:8100`으로 프록시하므로 **브라우�
 🚨 `--reload`를 쓰지 않는다. 🚨 `--host`는 `127.0.0.1`로 명시한다 —
 `0.0.0.0`/ngrok으로 노출하면 상류의 인증·레이트리밋 부재가 그대로 드러난다.
 
-### ⚠️ 이 저장소는 원본 소스에 의존한다
+### 자기 완결적이다
 
-`server/app/deps.py`가 `../백엔드/Communication_simulator`를 `sys.path`에 삽입해
-`rule_engine`을 **읽기 전용으로 import**한다. 원본 트리가 없으면 `/api/health`가 503과 함께
-`source_tree_found: false`를 반환한다.
+`engine/`이 규칙 엔진(원본 `Communication_simulator`의 사본, 포크 기준 `bdd1bc7`)을 포함한다.
+외부 경로 의존이 없다.
+
+🚨 **원본 소스 두 폴더는 한 바이트도 수정하지 않는다.** 회귀 방지 테스트가 이를 검사한다.
+포크 기록: `compliance/engine-fork/FORK-LOG.md`
 
 ---
 
@@ -67,7 +69,8 @@ frontendbackend/
 ├── docs/          분석·계약·작업기록          ← 여기부터 읽는다
 ├── contracts/     기계가 읽는 계약 (단일 진실 원천)
 ├── compliance/    규제 산출물 + 원본 패치 기록
-├── server/        BFF (FastAPI). 원본을 읽기 전용 import
+├── engine/        규칙 엔진 (Communication_simulator 사본 — 우리가 관리)
+├── server/        BFF (FastAPI). engine/을 in-process import
 └── web/           Next.js 15 (App Router + CSS Modules + TS strict)
 ```
 
@@ -77,7 +80,7 @@ frontendbackend/
 | `docs/01_인터페이스_계약서.md` | 연동의 정본. 필드마다 출처 3분류 라벨 |
 | `docs/04_아동안전_규제_리스크_대장.md` | CS-001~010 |
 | `docs/05_수직슬라이스_검증절차.md` | 붙여넣고 실행 가능 |
-| `docs/08_원본_변동사항.md` | 원본에 무엇을 했는가 (전부) |
+| `docs/08_원본_변동사항.md` | 원본은 무수정 · engine/이 상류와 다른 8개 파일 |
 | `compliance/CHILD-SAFETY-GATES.md` | 데모 차단 / 실아동 차단 게이트 |
 
 ---
@@ -98,7 +101,7 @@ frontendbackend/
 ## 안전 불변식 (기계 검사)
 
 ```bash
-cd web && node scripts/check-safety-rules.mjs     # 14건
+cd web && node scripts/check-safety-rules.mjs     # 14건 (프런트)
 ```
 
 | ID | 불변식 |
@@ -133,7 +136,7 @@ respond 구간에서 표정이 바뀌면 아이는 예외 없이 그것을 '내 
 ## 테스트
 
 ```bash
-./.venv/bin/python -m pytest -q     # 46건 (키 유무 무관)
+./.venv/bin/python -m pytest -q     # 50건 (키 유무 무관)
 cd web && npx tsc --noEmit && node scripts/check-safety-rules.mjs && npm run build
 ```
 
