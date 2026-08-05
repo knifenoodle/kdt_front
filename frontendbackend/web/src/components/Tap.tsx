@@ -64,6 +64,8 @@ export function Tap({ onTap, children, primary, parent, disabled, label }: Props
       draggable={false}
     >
       {children}
+      {/* 규칙 4: 글자는 아이콘·음성 위에 덧입히는 보조 레이어 — 화면에도 함께 보여준다 */}
+      <span className={`${styles.label} txt`}>{label}</span>
     </button>
   );
 }
