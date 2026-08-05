@@ -110,6 +110,28 @@
 /* 감정별 부속 규칙의 명시도가 (0,2,0)이라 !important 로 눌러야 한다 */
 .character[data-emo-soft='1'] :global(.extras > *) { display: none !important; }
 
+/* ── 마음 열림(openHeart) ──────────────────────────────────────────
+   mockup-v1.html:1786-1809. 정지(0.2초, 시선을 모은다) → 부풀기.
+   층 벌어짐·팥고물 튀기는 시루떡류(`lay1~3`·`pat`·`pat-burst` 클래스 보유)에서만
+   보인다 — 다른 캐릭터 SVG 에는 해당 클래스가 없어 부풀기만 자연히 적용된다. */
+.character[data-heart='freeze'] :global(.body) {
+  animation-play-state: paused;
+  transform: scale(0.97);
+  transition: transform 0.2s ease-out;
+}
+.character[data-heart='open'] :global(.body) { animation: heartPop 0.6s ease-out; }
+.character[data-heart='open'] :global(.lay2) { transform: translateY(11px); transition: transform 0.5s ease-out; }
+.character[data-heart='open'] :global(.lay3) { transform: translateY(24px); transition: transform 0.5s ease-out 0.06s; }
+.character[data-heart='open'] :global(.pat) { transition: opacity 0.3s ease-out; opacity: 0.85; }
+.character[data-heart='open'] :global(.pat-burst) { display: block; }
+.character[data-heart='open'] :global(.pat-burst circle) { animation: patBurst 0.7s ease-out forwards; }
+
+@keyframes heartPop { 0% { transform: scale(1); } 45% { transform: scale(1.12); } 100% { transform: scale(1.04); } }
+@keyframes patBurst {
+  from { transform: translate(0, 0); opacity: 1; }
+  to   { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+
 /* ── 키프레임 ──────────────────────────────────────────────────── */
 @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
 @keyframes blink   { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }

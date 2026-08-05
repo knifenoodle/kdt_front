@@ -1,6 +1,7 @@
 /* 아이 화면: 스크롤 없음, 한 화면 한 행동 (uiux기획/CLAUDE.md:54). */
 
 .start, .talk {
+  position: relative;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -37,6 +38,10 @@
   max-width: 22ch;
   min-height: 2.9em;         /* 대사 길이가 바뀌어도 레이아웃이 튀지 않는다 */
   margin: 0;
+  padding: 8px 20px;
+  border-radius: 20px;
+  /* 배경 씬 위에서도 글자가 읽히도록 — 색은 surface 토큰, 오류색이 아니다 */
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
 }
 
 .controls {

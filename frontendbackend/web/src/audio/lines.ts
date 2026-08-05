@@ -11,7 +11,7 @@
  *   (3) SessionScript → 최종 대사 확정 (`resolveSession`)
  */
 
-import type { Line, SessionScript } from '@/lib/api';
+import type { Line, Scene, SessionScript } from '@/lib/api';
 import { sanitizeForChild } from '@/lib/sanitizeForChild';
 
 /** (1) 정적 시스템 대사 — 서버와 무관하게 항상 존재해야 하는 것. */
@@ -30,6 +30,14 @@ export const LINES = {
   /** 유일한 평가성 발화이며 항상 긍정이다 (규칙 6) */
   cheer: { who: 'songpyeon', t: '잘 말했어! 네 마음을 그대로 말했구나.' } as Line,
   replay: { who: 'songpyeon', t: '다시 들려줄게.' } as Line,
+
+  /**
+   * 무지개떡 6층 완성 — mockup:1957-1963(`REWARDS`). 순환 재생되는 완성 보상 3종.
+   * 점수·비교가 아니라 그날 완주했다는 사실 하나만 축하한다(S12).
+   */
+  rewardParty: { who: 'songpyeon', t: '무지개떡을 다 모았어! 꿀파티다!' } as Line,
+  rewardPool: { who: 'songpyeon', t: '무지개떡을 다 모았어! 꿀수영장에서 놀자!' } as Line,
+  rewardPound: { who: 'songpyeon', t: '무지개떡을 다 모았어! 인절미랑 떡메로 쳐서 더 쫄깃하게 만들자!' } as Line,
 
   /**
    * 🚨 위험 발화 에스컬레이션 (S9).
@@ -72,6 +80,8 @@ export const FALLBACK_DECK = {
 export interface ResolvedSession {
   lines: SessionScript['lines'];
   turns: SessionScript['turns'];
+  /** 배경 씬 — enum 값이라 sanitize 대상이 아니다(자유 텍스트가 아님) */
+  scene: Scene;
   /** 개발자·텔레메트리용. 🚨 아이에게 표시하지 않는다 */
   blocked: { where: string; reason: string }[];
 }
@@ -109,5 +119,5 @@ export function resolveSession(script: SessionScript): ResolvedSession {
     back: clean(turn.back, `turns[${ti}].back`, LINES.cheer.t),
   })) as SessionScript['turns'];
 
-  return { lines, turns, blocked };
+  return { lines, turns, scene: script.scene, blocked };
 }

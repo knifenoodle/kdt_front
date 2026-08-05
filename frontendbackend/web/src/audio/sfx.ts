@@ -39,4 +39,27 @@ export const sfx = {
     tone(659, 130);
     window.setTimeout(() => tone(880, 180), 120);
   },
+  reward: () => {
+    [523, 659, 784, 1046].forEach((f, i) => window.setTimeout(() => tone(f, 200), i * 130));
+  },
+  /** 꿀 흐르는 느낌: 낮게 흘러내리는 톤 → 축하 아르페지오 */
+  party: () => {
+    [880, 784, 698, 622].forEach((f, i) => window.setTimeout(() => tone(f, 260, 'triangle'), i * 90));
+    [523, 659, 784, 1046, 1318].forEach((f, i) => window.setTimeout(() => tone(f, 300), 480 + i * 140));
+  },
+  /** 마음이 열리는 소리 — 3음 상행. 실패음이 아니라 개방음이다(규칙 6) */
+  open: () => {
+    [392, 523, 659].forEach((f, i) => window.setTimeout(() => tone(f, 240, 'triangle'), i * 110));
+  },
+  /** 떡메치기 — 낮고 짧은 타격 4번, 마지막에 밝은 화음 */
+  pound: () => {
+    [0, 1, 2, 3].forEach((n) => window.setTimeout(() => tone(196, 140, 'square'), 250 + n * 900));
+    window.setTimeout(() => {
+      [523, 659, 784].forEach((f, i) => window.setTimeout(() => tone(f, 320), i * 90));
+    }, 3250);
+  },
+  /** 첨벙 — 낮게 통통 튀는 톤. 폭죽 없이도 '들어갔다'가 들리게 */
+  splash: () => {
+    [392, 523, 440, 587, 494].forEach((f, i) => window.setTimeout(() => tone(f, 220, 'triangle'), i * 180));
+  },
 };

@@ -23,12 +23,14 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Character, type CharState } from '@/components/Character';
 import { MicButton } from '@/components/MicButton';
+import { Scene } from '@/components/Scene';
 import { Tap } from '@/components/Tap';
 import { Reward } from './Reward';
 import { LINES, FALLBACK_DECK, resolveSession, type ResolvedSession } from '@/audio/lines';
 import { speak, shutUp } from '@/audio/speak';
 import { sfx } from '@/audio/sfx';
 import { fetchSession, type SessionScript } from '@/lib/api';
+import { resetIfComplete } from '@/lib/progress';
 import { initialState, reduce } from '@/lib/session-machine';
 import { PARTNER_SKIN } from '@/assets/characters';
 import styles from './Talk.module.css';
@@ -42,8 +44,11 @@ export function Talk() {
   const [resolved, setResolved] = useState<ResolvedSession | null>(null);
   const [bubble, setBubble] = useState<{ who: string; t: string } | null>(null);
   const [waiting, setWaiting] = useState(false);
+  /** 마음 열림(openHeart, mockup:1786-1809) — 정지 → 부풀기(+시루떡 층 벌어짐) */
+  const [heart, setHeart] = useState<'idle' | 'freeze' | 'open'>('idle');
   const pending = useRef<Promise<void> | null>(null);
   const waitTimer = useRef<number | null>(null);
+  const heartTimers = useRef<number[]>([]);
 
   /** 🚨 서버 스크립트는 반드시 resolveSession() 을 경유한다(S4). */
   const adopt = useCallback((sc: SessionScript) => {
@@ -134,11 +139,26 @@ export function Talk() {
     // 폴백 데크에는 3턴 전체의 back 문구가 없으므로, 없을 때는 칭찬으로 대체한다 —
     // 침묵보다 낫고, 규칙 6(항상 긍정)에 어긋나지 않는다.
     const back = turn?.back ?? { who: script?.other ?? 'sirutteok', t: LINES.cheer.t };
+    // 🚨 마지막 턴 = 마음이 열린다. 정지(200ms) → 부풀기(+시루떡은 층도 벌어짐), 1.5초 뒤 원상복귀.
+    const totalTurns = resolved?.turns.length ?? 3;
+    if (s.turn === totalTurns - 1) {
+      setHeart('freeze');
+      heartTimers.current.push(
+        window.setTimeout(() => {
+          setHeart('open');
+          sfx.open();
+        }, 200),
+        window.setTimeout(() => setHeart('idle'), 1700),
+      );
+    }
     say(back.who, back.t, () => dispatch({ type: 'RESPOND_DONE' }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.phase, s.turn]);
 
-  useEffect(() => () => shutUp(), []);
+  useEffect(() => () => {
+    shutUp();
+    heartTimers.current.forEach((id) => window.clearTimeout(id));
+  }, []);
 
   const replay = useCallback(() => {
     if (bubble) speak(bubble.t);
@@ -150,6 +170,10 @@ export function Talk() {
    */
   const handleReplay = useCallback(() => {
     shutUp();
+    heartTimers.current.forEach((id) => window.clearTimeout(id));
+    heartTimers.current = [];
+    setHeart('idle');
+    resetIfComplete();
     dispatch({ type: 'RESET' });
     pending.current = null;
     setScript(null);
@@ -176,6 +200,7 @@ export function Talk() {
   // (캐릭터_가이드_v1.md §5). respond 단계에서만 back_emo 로 바뀌고, 그 전환은
   // 턴 인덱스에만 의존한다 — 판정 로직이 없으므로 "말했어요" 탭이 무엇을 대신하든 불변이다.
   const emoToShow = s.phase === 'respond' ? turn?.back_emo : turn?.emo;
+  const scene = resolved?.scene ?? 'kids';
 
   if (screen === 'start') {
     return (
@@ -198,9 +223,10 @@ export function Talk() {
 
   return (
     <main className={styles.talk}>
+      <Scene id={scene} />
       <div className={styles.stage}>
         <Character id={PARTNER_SKIN} state={partnerState} size={200} />
-        <Character id={other} state={otherState} emo={emoToShow ?? 'none'} size={200} />
+        <Character id={other} state={otherState} emo={emoToShow ?? 'none'} heart={heart} size={200} />
       </div>
 
       {/* 글자는 아이콘·음성 위에 덧입히는 보조 레이어다(규칙 4).

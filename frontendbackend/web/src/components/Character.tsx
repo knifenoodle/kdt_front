@@ -29,10 +29,16 @@ interface Props {
   emo?: Emotion | null;
   /** 감정 부속(눈물·땀·반짝)을 억제한다. 전이 중 깜빡임을 숨기는 용도 */
   soft?: boolean;
+  /**
+   * 마음 열림(openHeart, mockup:1786-1809) — 정지 → 부풀기. 시루떡류(`lay1~3`·`pat`·
+   * `pat-burst` 클래스를 가진 SVG)만 층이 벌어지고, 다른 캐릭터는 해당 클래스가
+   * 없어 부풀기만 자연히 적용된다.
+   */
+  heart?: 'idle' | 'freeze' | 'open';
   size?: number;
 }
 
-export function Character({ id, state, emo, soft, size = 220 }: Props) {
+export function Character({ id, state, emo, soft, heart = 'idle', size = 220 }: Props) {
   const svg = CHARACTER_SVG[id] ?? CHARACTER_SVG['songpyeon-green'];
   const baseId = id.split('-')[0];
 
@@ -43,6 +49,7 @@ export function Character({ id, state, emo, soft, size = 220 }: Props) {
       data-state={state}
       data-emo={emo ?? 'none'}
       data-emo-soft={soft ? '1' : undefined}
+      data-heart={heart !== 'idle' ? heart : undefined}
       role="img"
       aria-label={CHARACTER_NAME[baseId] ?? baseId}
       dangerouslySetInnerHTML={{ __html: svg }}
