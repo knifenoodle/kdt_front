@@ -18,9 +18,13 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+# rule_engine 이 os.environ.get("GEMINI_API_KEY") 를 읽기 전에 .env 를 주입해야 한다.
+load_dotenv()
 
 from . import deps, errors
 from .adapters.template_deck import (

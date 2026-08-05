@@ -10,3 +10,4 @@ httpx>=0.27.0        # TestClient
 pytest>=8.0
 pytest-asyncio>=0.23
 jsonschema>=4.0      # contracts/session-script.schema.json 대조
+python-dotenv>=1.0   # frontendbackend/.env 에서 GEMINI_API_KEY 로드
